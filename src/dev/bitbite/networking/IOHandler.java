@@ -50,6 +50,7 @@ public class IOHandler {
 					String message = reader.readLine();
 					onRead.accept(message);
 				} catch (IOException e) {
+					//TODO add Handler
 					e.printStackTrace();
 				}
 			}
