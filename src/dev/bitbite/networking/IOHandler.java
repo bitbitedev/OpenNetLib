@@ -77,8 +77,8 @@ public class IOHandler {
 	 * @see java.io.PrintWriter
 	 */
 	public void write(String data) {
-		writer.write(data+"\n");
-		writer.flush();
+		this.writer.write(data+"\n");
+		this.writer.flush();
 	}
 	
 }
