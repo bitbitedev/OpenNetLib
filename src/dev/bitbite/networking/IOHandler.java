@@ -45,7 +45,7 @@ public class IOHandler {
 		this.writer = new PrintWriter(outputStream);
 		this.reader = new BufferedReader(new InputStreamReader(inputStream));
 		this.inputListener = new Thread(()->{
-			while(Thread.interrupted()) {
+			while(!Thread.interrupted()) {
 				try {
 					String message = reader.readLine();
 					onRead.accept(message);

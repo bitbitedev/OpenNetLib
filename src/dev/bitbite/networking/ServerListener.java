@@ -1,16 +1,17 @@
 package dev.bitbite.networking;
 
-import java.net.Socket;
-
 public abstract class ServerListener {
 
 	public void onStart() {}
-	public void onStartFailed(Exception e) {}
+	public void onStartFailed(Object[] e) {}
 	public void onStartSuccess() {}
 	
-	public void onAccept(Socket clientSocket) {}
+	public void onAccept(Object[] e) {}
 	public void onAcceptStart() {}
 	public void onAcceptEnd() {}
-	public void onAcceptFailed(Exception e) {}
+	public void onAcceptFailed(Object[] e) {}
+	public void onClose() {}
+	public void onCloseSuccess() {}
+	public void onCloseFailed(Object[] args) {}
 	
 }

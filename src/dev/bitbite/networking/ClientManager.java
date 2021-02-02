@@ -16,38 +16,40 @@ public class ClientManager extends Thread{
 	
 	@Override
 	public void run() {
-		this.server.onAcceptStart();
+		this.server.notifyListeners(Server.ActionType.ACCEPT_START);
 		while(!Thread.currentThread().isInterrupted()) {
 			try {
 				Socket clientSocket = this.server.getServerSocket().accept();
 				CommunicationHandler ch = new CommunicationHandler(clientSocket, this);
 				this.communicationHandler.add(ch);
 				ch.start();
-				this.server.onAccept(clientSocket);
+				this.server.notifyListeners(Server.ActionType.ACCEPT, clientSocket);
 			} catch(Exception e) {
 				if(!e.getMessage().contentEquals("Interrupted function call: accept failed")){
-					this.server.onAcceptFailed(e);
+					this.server.notifyListeners(Server.ActionType.ACCEPT_FAILED, e);
 				}
 				if(e.getMessage().contentEquals("Socket is closed")) {
 					Thread.currentThread().interrupt();
 				}
 			}
 		}
-		this.server.onAcceptEnd();
+		this.server.notifyListeners(Server.ActionType.ACCEPT_END);
 	}
 	
 	public void close() {
+		this.server.notifyListeners(Server.ActionType.CLOSE);
 		Thread.currentThread().interrupt();
-		communicationHandler.forEach(ch -> ch.close());
+		this.communicationHandler.forEach(ch -> ch.close());
 		try {
-			server.getServerSocket().close();
+			this.server.getServerSocket().close();
 		} catch(IOException e) {
-			//TODO handle failing cm close
+			this.server.notifyListeners(Server.ActionType.CLOSE_FAILED, e);
 		}
+		this.server.notifyListeners(Server.ActionType.CLOSE_SUCCESS);
 	}
 	
 	public CommunicationHandler getCommunicationHandlerByIp(String clientAddress) {
-		for(CommunicationHandler ch : communicationHandler) {
+		for(CommunicationHandler ch : this.communicationHandler) {
 			if(ch.getIP().equals(clientAddress)) {
 				return ch;
 			}

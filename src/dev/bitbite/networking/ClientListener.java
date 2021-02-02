@@ -2,7 +2,12 @@ package dev.bitbite.networking;
 
 public abstract class ClientListener {
 
-	public abstract void onConnectionSuccess();
-	public abstract void onConnectionFailed(Exception e);
+	public void onConnection() {}
+	public void onConnectionSuccess() {}
+	public void onConnectionFailed(Object[] e) {}
+	
+	public void onClose() {}
+	public void onCloseFailed(Object[] e) {}
+	public void onCloseSuccess() {}
 	
 }
