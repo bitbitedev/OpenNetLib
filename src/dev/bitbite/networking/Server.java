@@ -10,7 +10,7 @@ public abstract class Server {
 	private ClientManager clientManager;
 	private ArrayList<ServerListener> listeners;
 	
-	enum ActionType {
+	enum EventType {
 		START,
 		START_SUCCESS,
 		START_FAILED,
@@ -31,20 +31,20 @@ public abstract class Server {
 	}
 	
 	public boolean start() {
-		notifyListeners(ActionType.START);
+		notifyListeners(EventType.START);
 		try {
 			this.serverSocket = new ServerSocket(this.PORT);
 		} catch(Exception e) {
-			notifyListeners(ActionType.START_FAILED);
+			notifyListeners(EventType.START_FAILED);
 		}
 		this.clientManager.start();
-		notifyListeners(ActionType.START_SUCCESS);
+		notifyListeners(EventType.START_SUCCESS);
 		return true;
 	}
 	
 	protected abstract void processReceivedData(String clientAddress, String data);
 	
-	protected void notifyListeners(ActionType type, Object... args) {
+	protected void notifyListeners(EventType type, Object... args) {
 		switch(type) {
 			case START:
 				this.listeners.forEach(l -> l.onStart());

@@ -12,16 +12,14 @@ import java.util.function.Consumer;
  * This IOHandler class combines an input- and an output stream object into a single class.
  * Incoming data of the inputstream will be propagated to the onRead consumer method passed
  * as an argument to the constructor.<br>
- * You can write to the outputstream via <code>write(String data)</code><br>
+ * You can write to the outputstream via {@link #write(String)}<br>
  * <br>
  * For the process of reading incoming data from the InputStream a Thread is started and named "IO InputListener"
  * 
- * @version 0.0.1-alpha
+ * @version 0.0.2-alpha
  */
 public class IOHandler {
 
-	private InputStream inputStream;
-	private OutputStream outputStream;
 	private PrintWriter writer;
 	private BufferedReader reader;
 	private Thread inputListener;
@@ -34,14 +32,12 @@ public class IOHandler {
 	 * @param outputStream, the outputStream to write to
 	 * @param onRead, the read Callback method which is called when a message is received
 	 * 
-	 * @version 0.0.1-alpha
+	 * @version 0.0.2-alpha
 	 */
 	public IOHandler(InputStream inputStream, OutputStream outputStream, Consumer<String> onRead) {
 		if(inputStream == null || outputStream == null || onRead == null) {
 			throw new IllegalArgumentException("Parameters of IOHandler constructor must not be null");
 		}
-		this.inputStream = inputStream;
-		this.outputStream = outputStream;
 		this.writer = new PrintWriter(outputStream);
 		this.reader = new BufferedReader(new InputStreamReader(inputStream));
 		this.inputListener = new Thread(()->{
@@ -62,11 +58,9 @@ public class IOHandler {
 	/**
 	 * Closes the streams
 	 * @throws IOException if any closing fails
-	 * @version 0.0.1-alpha
+	 * @version 0.0.2-alpha
 	 */
 	public void close() throws IOException {
-		this.inputStream.close();
-		this.outputStream.close();
 		this.reader.close();
 		this.writer.close();
 	}

@@ -10,6 +10,7 @@ public abstract class ServerListener {
 	public void onAcceptStart() {}
 	public void onAcceptEnd() {}
 	public void onAcceptFailed(Object[] e) {}
+	
 	public void onClose() {}
 	public void onCloseSuccess() {}
 	public void onCloseFailed(Object[] args) {}
