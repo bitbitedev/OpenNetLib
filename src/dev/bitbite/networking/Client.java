@@ -4,17 +4,16 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 /**
- * Represents an abstract implementation of the client-side connection.
+ * Represents an abstract implementation of the client-side connection.<br>
  * The connection process can be initiated using the client objects {@link #connect()} method, 
- * which will return true, if the connection process has been successful.
+ * which will return true, if the connection process has been successful.<br>
  * Closing the connection can be done using the client objects {@link #close()} method,
  * which will return true, if the disconnection process has been completed successfully.<br>
- * Incomming data from the server will be propagated to the {@link #processReceivedData(String)}
- * function. <br>Data to the server can be sent using the clients {@link dev.bitbite.networking.IOHandler}.<br>
- * Some events trigger the notification of registered {@link dev.bitbite.networking.ClientListener}s. 
+ * Incomming data from the server will be propagated to {@link #processReceivedData(String)}.<br>
+ * Data to the server can be sent using the clients {@link IOHandler}.<br>
+ * Some events trigger the notification of registered {@link ClientListener}s. 
  * 
- * 
- * @see dev.bitbite.networking.ClientListener
+ * @see ClientListener
  * 
  * @version 0.0.1-alpha
  */
@@ -30,7 +29,7 @@ public abstract class Client {
 	/**
 	 * The different event-types listeners can listen on
 	 * 
-	 * @see dev.bitbite.networking.ClientListener
+	 * @see ClientListener
 	 * @version 0.0.1-alpha
 	 */
 	enum EventType {
@@ -87,7 +86,7 @@ public abstract class Client {
 	 * 
 	 * @return true if the connection has been closed successfully
 	 * 
-	 * @see dev.bitbite.networking.IOHandler#close()
+	 * @see IOHandler#close()
 	 * 
 	 * @version 0.0.1-alpha
 	 */
@@ -118,7 +117,10 @@ public abstract class Client {
 	 * @param type of event that occured
 	 * @param args optional additional data
 	 * 
-	 * @see dev.bitbite.networking.ClientListener
+	 * @throws IllegalArgumentException if additional arguments are supplied
+	 * whose types do not match the expected types of the listeners eventfunction
+	 * 
+	 * @see ClientListener
 	 * 
 	 * @version 0.0.1-alpha
 	 */
@@ -131,13 +133,19 @@ public abstract class Client {
 				listeners.forEach(l -> l.onConnectionSuccess());
 				break;
 			case CONNECTION_FAILED:
-				listeners.forEach(l -> l.onConnectionFailed(args));
+				if(!(args[0] instanceof Exception)) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
+				}
+				listeners.forEach(l -> l.onConnectionFailed((Exception)args[0]));
 				break;
 			case CLOSE:
 				listeners.forEach(l -> l.onClose());
 				break;
 			case CLOSE_FAILED:
-				listeners.forEach(l -> l.onCloseFailed(args));
+				if(!(args[0] instanceof Exception)) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
+				}
+				listeners.forEach(l -> l.onCloseFailed((Exception)args[0]));
 				break;
 			case CLOSE_SUCCESS:
 				listeners.forEach(l -> l.onCloseSuccess());

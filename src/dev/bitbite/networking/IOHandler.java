@@ -32,6 +32,8 @@ public class IOHandler {
 	 * @param outputStream, the outputStream to write to
 	 * @param onRead, the read Callback method which is called when a message is received
 	 * 
+	 * @throws IllegalArgumentException if at least one of the supplied arguments is null
+	 * 
 	 * @version 0.0.2-alpha
 	 */
 	public IOHandler(InputStream inputStream, OutputStream outputStream, Consumer<String> onRead) {

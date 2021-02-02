@@ -23,7 +23,7 @@ public class ClientManager extends Thread{
 				CommunicationHandler ch = new CommunicationHandler(clientSocket, this);
 				this.communicationHandler.add(ch);
 				ch.start();
-				this.server.notifyListeners(Server.EventType.ACCEPT, clientSocket);
+				this.server.notifyListeners(Server.EventType.ACCEPT, ch);
 			} catch(Exception e) {
 				if(!e.getMessage().contentEquals("Interrupted function call: accept failed")){
 					this.server.notifyListeners(Server.EventType.ACCEPT_FAILED, e);
@@ -36,7 +36,7 @@ public class ClientManager extends Thread{
 		this.server.notifyListeners(Server.EventType.ACCEPT_END);
 	}
 	
-	public void close() {
+	public boolean close() {
 		this.server.notifyListeners(Server.EventType.CLOSE);
 		Thread.currentThread().interrupt();
 		this.communicationHandler.forEach(ch -> ch.close());
@@ -44,8 +44,10 @@ public class ClientManager extends Thread{
 			this.server.getServerSocket().close();
 		} catch(IOException e) {
 			this.server.notifyListeners(Server.EventType.CLOSE_FAILED, e);
+			return false;
 		}
 		this.server.notifyListeners(Server.EventType.CLOSE_SUCCESS);
+		return true;
 	}
 	
 	public CommunicationHandler getCommunicationHandlerByIp(String clientAddress) {
