@@ -2,6 +2,7 @@ package dev.bitbite.networking;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import dev.bitbite.networking.Server.EventType;
 
@@ -31,8 +32,7 @@ public class CommunicationHandler extends Thread {
 										   clientSocket.getOutputStream(),
 										   this::processReceivedData);
 		} catch (IOException e) {
-			//TODO add listener
-			e.printStackTrace();
+			this.clientManager.getServer().notifyListeners(Server.EventType.COMMUNICATIONHANDLER_INIT_FAILED, e);
 		}
 	}
 	
@@ -61,6 +61,22 @@ public class CommunicationHandler extends Thread {
 	 */
 	protected void processReceivedData(String data) {
 		this.clientManager.getServer().processReceivedData(getIP(), data);
+	}
+	
+	/**
+	 * Registers a listener to the underlying IOHandler
+	 * @param listener to add
+	 */
+	public void registerListener(IOHandlerListener listener) {
+		this.ioHandler.registerListener(listener);
+	}
+	
+	/**
+	 * Registers a list of listeners to the underlying IOHandler
+	 * @param listeners to add
+	 */
+	public void registerListener(ArrayList<IOHandlerListener> listener) {
+		listener.forEach(l -> this.ioHandler.registerListener(l));
 	}
 	
 	/**

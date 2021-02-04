@@ -25,6 +25,7 @@ public abstract class Client {
 	private IOHandler ioHandler;
 	private boolean keepAlive = false;
 	private ArrayList<ClientListener> listeners;
+	private ArrayList<IOHandlerListener> ioListeners;
 	
 	/**
 	 * The different event-types, which occur in the client, listeners can listen on
@@ -50,6 +51,8 @@ public abstract class Client {
 	public Client(String host, int port) {
 		this.HOST = host;
 		this.PORT = port;
+		this.listeners = new ArrayList<ClientListener>();
+		this.ioListeners = new ArrayList<IOHandlerListener>();
 	}
 	
 	/**
@@ -67,12 +70,13 @@ public abstract class Client {
 			notifyListeners(EventType.CONNECTION);
 			this.socket = new Socket(this.HOST, this.PORT);
 			this.ioHandler = new IOHandler(this.socket.getInputStream(), this.socket.getOutputStream(), this::processReceivedData);
+			this.ioListeners.forEach(l -> this.ioHandler.registerListener(l));
 			if(this.socket.isConnected()) {
 				notifyListeners(EventType.CONNECTION_SUCCESS);
 				this.socket.setKeepAlive(this.keepAlive);
 			}
 		} catch (Exception e) {
-			notifyListeners(EventType.CONNECTION_FAILED);
+			notifyListeners(EventType.CONNECTION_FAILED, e);
 			return false;
 		}
 		return true;
@@ -96,7 +100,7 @@ public abstract class Client {
 			this.ioHandler.close();
 			this.socket.close();
 		} catch(Exception e) {
-			notifyListeners(EventType.CLOSE_FAILED);
+			notifyListeners(EventType.CLOSE_FAILED, e);
 			return false;
 		}
 		notifyListeners(EventType.CLOSE_SUCCESS);
@@ -109,6 +113,43 @@ public abstract class Client {
 	 * @param data sent by the server
 	 */
 	protected abstract void processReceivedData(String data);
+	
+	/**
+	 * Registers a ClientListener
+	 * @param listener to add
+	 */
+	public void registerListener(ClientListener listener) {
+		listeners.add(listener);
+	}
+	
+	/**
+	 * Registers a IOHandlerListener
+	 * @param listener to add
+	 */
+	public void registerListener(IOHandlerListener listener) {
+		ioListeners.add(listener);
+	}
+	
+	/**
+	 * Removes ClientListener from the listeners
+	 * @param listener to remove
+	 */
+	public void removeListener(ClientListener listener) {
+		if(listeners.contains(listener)) {
+			listeners.remove(listener);
+		}
+	}
+	
+	/**
+	 * Removes IOHandlerListener from the listeners
+	 * @param listener to remove
+	 */
+	public void removeListener(IOHandlerListener listener) {
+		if(ioListeners.contains(listener)) {
+			ioListeners.remove(listener);
+			this.ioHandler.removeListener(listener);
+		}
+	}
 	
 	/**
 	 * Calls the respective function of each listener depending on the event type.<br>
@@ -133,7 +174,9 @@ public abstract class Client {
 				listeners.forEach(l -> l.onConnectionSuccess());
 				break;
 			case CONNECTION_FAILED:
-				if(!(args[0] instanceof Exception)) {
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
+				} else if(!(args[0] instanceof Exception)) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 				}
 				listeners.forEach(l -> l.onConnectionFailed((Exception)args[0]));
@@ -142,7 +185,9 @@ public abstract class Client {
 				listeners.forEach(l -> l.onClose());
 				break;
 			case CLOSE_FAILED:
-				if(!(args[0] instanceof Exception)) {
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
+				} else if(args.length == 0 || !(args[0] instanceof Exception)) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 				}
 				listeners.forEach(l -> l.onCloseFailed((Exception)args[0]));
@@ -166,6 +211,14 @@ public abstract class Client {
 			return false;
 		}
 		return this.socket.isConnected();
+	}
+	
+	/**
+	 * Returns the IOHandler associated with the client object
+	 * @return the IOHandler
+	 */
+	public IOHandler getIOHandler() {
+		return this.ioHandler;
 	}
 	
 }

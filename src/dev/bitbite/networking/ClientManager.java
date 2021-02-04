@@ -41,6 +41,7 @@ public class ClientManager extends Thread{
 			try {
 				Socket clientSocket = this.server.getServerSocket().accept();
 				CommunicationHandler ch = new CommunicationHandler(clientSocket, this);
+				ch.registerListener(this.server.getIOHandlerListeners());
 				this.communicationHandler.add(ch);
 				ch.start();
 				this.server.notifyListeners(Server.EventType.ACCEPT, ch);

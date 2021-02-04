@@ -58,6 +58,12 @@ public abstract class ServerListener {
 	public void onCloseFailed(Exception e) {}
 	
 	/**
+	 * Will be called if an error occures while trying to init the IOHandler inside the CommunicationHandler
+	 * @param exception which was thrown
+	 */
+	public void onCommunicationHandlerInitFailed(Exception exception) {}
+	
+	/**
 	 * Will be called before a CommunicationHandler is tried to be closed
 	 */
 	public void onCommunicationHandlerClose() {}

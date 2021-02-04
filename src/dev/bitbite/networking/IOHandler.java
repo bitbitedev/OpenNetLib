@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
@@ -71,9 +72,11 @@ public class IOHandler {
 				try {
 					String message = reader.readLine();
 					onRead.accept(message);
+				} catch (SocketException e) {
+					notifyListeners(EventType.DATA_READ_FAILED, e);
+					Thread.currentThread().interrupt();
 				} catch (IOException e) {
-					notifyListeners(EventType.DATA_READ_FAILED);
-					e.printStackTrace();
+					notifyListeners(EventType.DATA_READ_FAILED, e);
 				}
 			}
 			notifyListeners(EventType.DATA_READ_END);
@@ -93,7 +96,7 @@ public class IOHandler {
 			this.reader.close();
 			this.writer.close();
 		} catch(Exception e) {
-			notifyListeners(EventType.CLOSE_FAILED);
+			notifyListeners(EventType.CLOSE_FAILED, e);
 		}
 		notifyListeners(EventType.CLOSE_END);
 	}
@@ -105,14 +108,32 @@ public class IOHandler {
 	 * @see java.io.PrintWriter
 	 */
 	public void write(String data) {
-		notifyListeners(EventType.WRITE);
+		notifyListeners(EventType.WRITE, data);
 		try {
 			this.writer.write(data+"\n");
 			this.writer.flush();
 		} catch(Exception e) {
-			notifyListeners(EventType.WRITE_FAILED);
+			notifyListeners(EventType.WRITE_FAILED, e);
 		}
 		notifyListeners(EventType.WRITE_END);
+	}
+
+	/**
+	 * Registers a ClientListener
+	 * @param listener to add
+	 */
+	public void registerListener(IOHandlerListener listener) {
+		listeners.add(listener);
+	}
+	
+	/**
+	 * Removes ClientListener from the listeners
+	 * @param listener to remove
+	 */
+	public void removeListener(IOHandlerListener listener) {
+		if(listeners.contains(listener)) {
+			listeners.remove(listener);
+		}
 	}
 	
 	/**
@@ -138,7 +159,9 @@ public class IOHandler {
 				listeners.forEach(l -> l.onDataReadEnd());
 				break;
 			case DATA_READ_FAILED:
-				if(!(args[0] instanceof Exception)) {
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
+				} else if(!(args[0] instanceof Exception)) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 				}
 				listeners.forEach(l -> l.onDataReadFailed((Exception)args[0]));
@@ -150,13 +173,17 @@ public class IOHandler {
 				listeners.forEach(l -> l.onCloseEnd());
 				break;
 			case CLOSE_FAILED:
-				if(!(args[0] instanceof Exception)) {
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
+				} else if(!(args[0] instanceof Exception)) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 				}
 				listeners.forEach(l -> l.onCloseFailed((Exception)args[0]));
 				break;
 			case WRITE:
-				if(!(args[0] instanceof String)) {
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type String, but got nothing");
+				} else if(!(args[0] instanceof String)) {
 					throw new IllegalArgumentException("Expected object of type String, but got "+args[0].getClass().getSimpleName());
 				}
 				listeners.forEach(l -> l.onWrite((String)args[0]));
@@ -165,7 +192,9 @@ public class IOHandler {
 				listeners.forEach(l -> l.onWriteEnd());
 				break;
 			case WRITE_FAILED:
-				if(!(args[0] instanceof Exception)) {
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
+				} else if(!(args[0] instanceof Exception)) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 				}
 				listeners.forEach(l -> l.onWriteFailed((Exception)args[0]));

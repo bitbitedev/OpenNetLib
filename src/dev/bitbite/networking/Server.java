@@ -21,6 +21,7 @@ public abstract class Server {
 	private ServerSocket serverSocket;
 	private ClientManager clientManager;
 	private ArrayList<ServerListener> listeners;
+	private ArrayList<IOHandlerListener> ioListeners;
 	
 	/**
 	 * The different event-types, which occur in the server, listeners can listen on
@@ -39,6 +40,7 @@ public abstract class Server {
 		CLOSE,
 		CLOSE_END,
 		CLOSE_FAILED,
+		COMMUNICATIONHANDLER_INIT_FAILED,
 		COMMUNICATIONHANDLER_CLOSE,
 		COMMUNICATIONHANDLER_CLOSE_END,
 		COMMUNICATIONHANDLER_CLOSE_FAILED
@@ -53,6 +55,7 @@ public abstract class Server {
 		this.clientManager = new ClientManager(this);
 		this.clientManager.setName("ClientManager");
 		this.listeners = new ArrayList<ServerListener>();
+		this.ioListeners = new ArrayList<IOHandlerListener>();
 	}
 	
 	/**
@@ -86,6 +89,58 @@ public abstract class Server {
 	 * @param data sent by the server
 	 */
 	protected abstract void processReceivedData(String clientAddress, String data);
+
+	/**
+	 * Registers a ClientListener
+	 * @param listener to add
+	 */
+	public void registerListener(ServerListener listener) {
+		listeners.add(listener);
+	}
+	
+	/**
+	 * Registers a IOHandlerListener
+	 * @param listener to add
+	 */
+	public void registerListener(IOHandlerListener listener) {
+		ioListeners.add(listener);
+	}
+	
+	/**
+	 * Removes ClientListener from the listeners
+	 * @param listener to remove
+	 */
+	public void removeListener(ServerListener listener) {
+		if(listeners.contains(listener)) {
+			listeners.remove(listener);
+		}
+	}
+	
+	/**
+	 * Removes IOHandlerListener from the listeners
+	 * @param listener to remove
+	 */
+	public void removeListener(IOHandlerListener listener) {
+		if(ioListeners.contains(listener)) {
+			ioListeners.remove(listener);
+		}
+	}
+	
+	/**
+	 * Returns a list of all ServerListeners registered at the server
+	 * @return the list of ServerListeners
+	 */
+	public ArrayList<ServerListener> getServerListeners(){
+		return this.listeners;
+	}
+	
+	/**
+	 * Returns a list of all IOHandlers registered at the server
+	 * @return the list of IOHandlers
+	 */
+	public ArrayList<IOHandlerListener> getIOHandlerListeners(){
+		return this.ioListeners;
+	}
 	
 	/**
 	 * Calls the respective function of each listener depending on the event type.<br>
@@ -110,13 +165,17 @@ public abstract class Server {
 				this.listeners.forEach(l -> l.onStartSuccess());
 				break;
 			case START_FAILED:
-				if(!(args[0] instanceof Exception)) {
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
+				} else if(!(args[0] instanceof Exception)) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 				}
 				this.listeners.forEach(l -> l.onStartFailed((Exception)args[0]));
 				break;
 			case ACCEPT:
-				if(!(args[0] instanceof CommunicationHandler)) {
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type CommunicationHandler, but got nothing");
+				} else if(!(args[0] instanceof CommunicationHandler)) {
 					throw new IllegalArgumentException("Expected object of type CommunicationHandler, but got "+args[0].getClass().getSimpleName());
 				}
 				this.listeners.forEach(l -> l.onAccept((CommunicationHandler)args[0]));
@@ -128,7 +187,9 @@ public abstract class Server {
 				this.listeners.forEach(l -> l.onAcceptStart());
 				break;
 			case ACCEPT_FAILED:
-				if(!(args[0] instanceof Exception)) {
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
+				} else if(!(args[0] instanceof Exception)) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 				}
 				this.listeners.forEach(l -> l.onAcceptFailed((Exception)args[0]));
@@ -140,10 +201,20 @@ public abstract class Server {
 				this.listeners.forEach(l -> l.onCloseEnd());
 				break;
 			case CLOSE_FAILED:
-				if(!(args[0] instanceof Exception)) {
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
+				} else if(!(args[0] instanceof Exception)) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 				}
 				this.listeners.forEach(l -> l.onCloseFailed((Exception)args[0]));
+				break;
+			case COMMUNICATIONHANDLER_INIT_FAILED:
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
+				} else if(!(args[0] instanceof Exception)) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
+				}
+				this.listeners.forEach(l -> l.onCommunicationHandlerInitFailed((Exception)args[0]));
 				break;
 			case COMMUNICATIONHANDLER_CLOSE:
 				this.listeners.forEach(l -> l.onCommunicationHandlerClose());
@@ -152,7 +223,9 @@ public abstract class Server {
 				this.listeners.forEach(l -> l.onCommunicationHandlerCloseEnd());
 				break;
 			case COMMUNICATIONHANDLER_CLOSE_FAILED:
-				if(!(args[0] instanceof Exception)) {
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
+				} else if(!(args[0] instanceof Exception)) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 				}
 				this.listeners.forEach(l -> l.onCommunicationHandlerCloseFailed((Exception)args[0]));
