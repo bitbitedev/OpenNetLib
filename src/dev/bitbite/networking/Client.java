@@ -27,7 +27,7 @@ public abstract class Client {
 	private ArrayList<ClientListener> listeners;
 	
 	/**
-	 * The different event-types listeners can listen on
+	 * The different event-types, which occur in the client, listeners can listen on
 	 * 
 	 * @see ClientListener
 	 * @version 0.0.1-alpha

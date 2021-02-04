@@ -23,7 +23,7 @@ public abstract class Server {
 	private ArrayList<ServerListener> listeners;
 	
 	/**
-	 * The different event-types listeners can listen on
+	 * The different event-types, which occur in the server, listeners can listen on
 	 * 
 	 * @see ServerListener
 	 * @version 0.0.1-alpha
