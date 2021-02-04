@@ -11,7 +11,7 @@ import java.util.ArrayList;
  * Incomming data from any client will be propagated to {@link Server#processReceivedData(String, String)}
  * containing the clients address of the client the data came from.<br>
  * In order to send data to the client you must request the proper {@link CommunicationHandler} using the servers {@link ClientManager}
- * ({@link ClientManager#getCommunicationHandlerByIp(String)})
+ * ({@link ClientManager#getCommunicationHandlerByIP(String)})
  *
  * @version 0.0.1-alpha
  */

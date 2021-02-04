@@ -4,16 +4,36 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * Administrates the clients an runs in its own Thread. It accepts them from the serversocket and
+ * starts a {@link CommunicationHandler} in a separate thread for each connecting client.<br>
+ * 
+ * @see CommunicationHandler
+ * 
+ * @version 0.0.1-alpha
+ */
 public class ClientManager extends Thread{
 
 	private final Server server;
 	private CopyOnWriteArrayList<CommunicationHandler> communicationHandler;
 	
+	/**
+	 * Initiates a ClientManager object
+	 * @param server that it should manage clients for
+	 */
 	public ClientManager(Server server) {
 		this.server = server;
 		this.communicationHandler = new CopyOnWriteArrayList<CommunicationHandler>();
 	}
 	
+	/**
+	 * Starts the process of accepting clients to the server. For each client that is accepted
+	 * a {@link CommunicationHandler} is started in a separate Thread.
+	 * 
+	 * @see CommunicationHandler
+	 * 
+	 * @version 0.0.1-alpha
+	 */
 	@Override
 	public void run() {
 		this.server.notifyListeners(Server.EventType.ACCEPT_START);
@@ -36,6 +56,12 @@ public class ClientManager extends Thread{
 		this.server.notifyListeners(Server.EventType.ACCEPT_END);
 	}
 	
+	/**
+	 * Closes all client connection and the serversocket itself
+	 * @return true if the closing process finishes successfully
+	 * 
+	 * @version 0.0.1-alpha
+	 */
 	public boolean close() {
 		this.server.notifyListeners(Server.EventType.CLOSE);
 		Thread.currentThread().interrupt();
@@ -50,7 +76,15 @@ public class ClientManager extends Thread{
 		return true;
 	}
 	
-	public CommunicationHandler getCommunicationHandlerByIp(String clientAddress) {
+	/**
+	 * Searches for a {@link CommunicationHandler} by its sockets remote socket address and
+	 * returns it. If no CommunicationHandler with that address it will return <code>null</code>.
+	 * 
+	 * @param clientAddress the IP address of the socket related to the CommunicationHandler to look for
+	 * 
+	 * @return the communicationhandler or null
+	 */
+	public CommunicationHandler getCommunicationHandlerByIP(String clientAddress) {
 		for(CommunicationHandler ch : this.communicationHandler) {
 			if(ch.getIP().equals(clientAddress)) {
 				return ch;
@@ -59,6 +93,10 @@ public class ClientManager extends Thread{
 		return null;
 	}
 	
+	/**
+	 * Returns the server object related to this clientmanager
+	 * @return the serverobject
+	 */
 	public Server getServer() {
 		return this.server;
 	}
