@@ -50,11 +50,27 @@ public abstract class ServerListener {
 	/**
 	 * Will be called once the server has been closed successfully
 	 */
-	public void onCloseSuccess() {}
+	public void onCloseEnd() {}
 	/**
 	 * Will be called if an error occures while trying to close the server
 	 * @param e the exception which was thrown
 	 */
 	public void onCloseFailed(Exception e) {}
+	
+	/**
+	 * Will be called before a CommunicationHandler is tried to be closed
+	 */
+	public void onCommunicationHandlerClose() {}
+	
+	/**
+	 * Will be called once a CommunicationHandler is closed
+	 */
+	public void onCommunicationHandlerCloseEnd() {}
+	
+	/**
+	 * Will be called if the closing process fails
+	 * @param exception which was thrown during the process of closing the CommunicationHandler
+	 */
+	public void onCommunicationHandlerCloseFailed(Exception exception) {}
 	
 }

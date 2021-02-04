@@ -72,7 +72,7 @@ public class ClientManager extends Thread{
 			this.server.notifyListeners(Server.EventType.CLOSE_FAILED, e);
 			return false;
 		}
-		this.server.notifyListeners(Server.EventType.CLOSE_SUCCESS);
+		this.server.notifyListeners(Server.EventType.CLOSE_END);
 		return true;
 	}
 	

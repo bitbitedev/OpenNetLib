@@ -3,6 +3,8 @@ package dev.bitbite.networking;
 import java.io.IOException;
 import java.net.Socket;
 
+import dev.bitbite.networking.Server.EventType;
+
 /**
  * Manages the Communication with a client by handling its IO.
  * Runs in its own Thread and names it with the associated remote socket address.
@@ -40,13 +42,15 @@ public class CommunicationHandler extends Thread {
 	 * @version 0.0.1-alpha
 	 */
 	public void close() {
+		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE);
 		try {
 			this.ioHandler.close();
 			this.clientSocket.close();
 		} catch(Exception e) {
-			//TODO add Listener
+			this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE_FAILED, e);
 			e.printStackTrace();
 		}
+		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE_END);
 	}
 	
 	/**

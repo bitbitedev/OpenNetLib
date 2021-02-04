@@ -37,8 +37,11 @@ public abstract class Server {
 		ACCEPT_END,
 		ACCEPT_FAILED,
 		CLOSE,
-		CLOSE_SUCCESS,
-		CLOSE_FAILED
+		CLOSE_END,
+		CLOSE_FAILED,
+		COMMUNICATIONHANDLER_CLOSE,
+		COMMUNICATIONHANDLER_CLOSE_END,
+		COMMUNICATIONHANDLER_CLOSE_FAILED
 	}
 	
 	/**
@@ -133,14 +136,26 @@ public abstract class Server {
 			case CLOSE:
 				this.listeners.forEach(l -> l.onClose());
 				break;
-			case CLOSE_SUCCESS:
-				this.listeners.forEach(l -> l.onCloseSuccess());
+			case CLOSE_END:
+				this.listeners.forEach(l -> l.onCloseEnd());
 				break;
 			case CLOSE_FAILED:
 				if(!(args[0] instanceof Exception)) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 				}
 				this.listeners.forEach(l -> l.onCloseFailed((Exception)args[0]));
+				break;
+			case COMMUNICATIONHANDLER_CLOSE:
+				this.listeners.forEach(l -> l.onCommunicationHandlerClose());
+				break;
+			case COMMUNICATIONHANDLER_CLOSE_END:
+				this.listeners.forEach(l -> l.onCommunicationHandlerCloseEnd());
+				break;
+			case COMMUNICATIONHANDLER_CLOSE_FAILED:
+				if(!(args[0] instanceof Exception)) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
+				}
+				this.listeners.forEach(l -> l.onCommunicationHandlerCloseFailed((Exception)args[0]));
 				break;
 		}
 	}
