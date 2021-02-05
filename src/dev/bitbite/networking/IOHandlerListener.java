@@ -22,7 +22,7 @@ public abstract class IOHandlerListener {
 	public void onDataReadEnd() {}
 	
 	/**
-	 * Will be called if an error occures while trying to read data from the inputStream
+	 * Will be called if an error occurs while trying to read data from the inputStream
 	 * @param exception which was thrown
 	 */
 	public void onDataReadFailed(Exception exception) {}
@@ -38,7 +38,7 @@ public abstract class IOHandlerListener {
 	public void onCloseEnd() {}
 	
 	/**
-	 * Will be called if an error occures while trying to close the streams
+	 * Will be called if an error occurs while trying to close the streams
 	 * @param exception which was thrown during the process
 	 */
 	public void onCloseFailed(Exception exception) {}

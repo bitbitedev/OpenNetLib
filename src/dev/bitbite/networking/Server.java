@@ -30,20 +30,21 @@ public abstract class Server {
 	 * @version 0.0.1-alpha
 	 */
 	enum EventType {
-		START,
-		START_SUCCESS,
-		START_FAILED,
 		ACCEPT,
-		ACCEPT_START,
 		ACCEPT_END,
 		ACCEPT_FAILED,
+		ACCEPT_START,
 		CLOSE,
 		CLOSE_END,
 		CLOSE_FAILED,
-		COMMUNICATIONHANDLER_INIT_FAILED,
 		COMMUNICATIONHANDLER_CLOSE,
 		COMMUNICATIONHANDLER_CLOSE_END,
-		COMMUNICATIONHANDLER_CLOSE_FAILED
+		COMMUNICATIONHANDLER_CLOSE_FAILED,
+		COMMUNICATIONHANDLER_INIT_FAILED,
+		SOCKET_CLOSED,
+		START,
+		START_FAILED,
+		START_SUCCESS
 	}
 	
 	/**
@@ -154,7 +155,7 @@ public abstract class Server {
 	 * 
 	 * @see ServerListener
 	 * 
-	 * @version 0.0.1-alpha
+	 * @version 0.0.2-alpha
 	 */
 	protected void notifyListeners(EventType type, Object... args) {
 		switch(type) {
@@ -193,6 +194,14 @@ public abstract class Server {
 					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 				}
 				this.listeners.forEach(l -> l.onAcceptFailed((Exception)args[0]));
+				break;
+			case SOCKET_CLOSED:
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
+				} else if(!(args[0] instanceof Exception)) {
+					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
+				}
+				this.listeners.forEach(l -> l.onSocketClosed((Exception)args[0]));
 				break;
 			case CLOSE:
 				this.listeners.forEach(l -> l.onClose());

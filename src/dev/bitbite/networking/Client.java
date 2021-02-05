@@ -1,6 +1,7 @@
 package dev.bitbite.networking;
 
 import java.net.Socket;
+import java.net.URL;
 import java.util.ArrayList;
 
 /**
@@ -9,7 +10,7 @@ import java.util.ArrayList;
  * which will return true, if the connection process has been successful.<br>
  * Closing the connection can be done using the client objects {@link #close()} method,
  * which will return true, if the disconnection process has been completed successfully.<br>
- * Incomming data from the server will be propagated to {@link #processReceivedData(String)}.<br>
+ * Incoming data from the server will be forwarded to {@link #processReceivedData(String)}.<br>
  * Data to the server can be sent using the clients {@link IOHandler}.<br>
  * Some events trigger the notification of registered {@link ClientListener}s. 
  * 
@@ -56,8 +57,20 @@ public abstract class Client {
 	}
 	
 	/**
+	 * Creates a Client object and sets the endpoint to which the client will connect on startup.
+	 * @param url the URL object that specifies the endpoint adress and port.
+	 * @version 0.0.1-alpha
+	 */
+	public Client(URL url) {
+		this.HOST = url.getHost();
+		this.PORT = url.getPort();
+		this.listeners = new ArrayList<ClientListener>();
+		this.ioListeners = new ArrayList<IOHandlerListener>();
+	}
+	
+	/**
 	 * Initiates the connection process.<br>
-	 * The IOHandler is beeing created.
+	 * The IOHandler will be created.
 	 * Listeners will be called before the client tries to connect to the server,
 	 * when the connection was successful, and when it wasn't.
 	 * 
@@ -67,16 +80,16 @@ public abstract class Client {
 	 */
 	public boolean connect() {
 		try {
-			notifyListeners(EventType.CONNECTION);
+			this.notifyListeners(EventType.CONNECTION);
 			this.socket = new Socket(this.HOST, this.PORT);
 			this.ioHandler = new IOHandler(this.socket.getInputStream(), this.socket.getOutputStream(), this::processReceivedData);
 			this.ioListeners.forEach(l -> this.ioHandler.registerListener(l));
 			if(this.socket.isConnected()) {
-				notifyListeners(EventType.CONNECTION_SUCCESS);
+				this.notifyListeners(EventType.CONNECTION_SUCCESS);
 				this.socket.setKeepAlive(this.keepAlive);
 			}
 		} catch (Exception e) {
-			notifyListeners(EventType.CONNECTION_FAILED, e);
+			this.notifyListeners(EventType.CONNECTION_FAILED, e);
 			return false;
 		}
 		return true;
@@ -96,14 +109,14 @@ public abstract class Client {
 	 */
 	public boolean close() {
 		try {
-			notifyListeners(EventType.CLOSE);
+			this.notifyListeners(EventType.CLOSE);
 			this.ioHandler.close();
 			this.socket.close();
 		} catch(Exception e) {
-			notifyListeners(EventType.CLOSE_FAILED, e);
+			this.notifyListeners(EventType.CLOSE_FAILED, e);
 			return false;
 		}
-		notifyListeners(EventType.CLOSE_SUCCESS);
+		this.notifyListeners(EventType.CLOSE_SUCCESS);
 		return true;
 	}
 	
@@ -119,7 +132,7 @@ public abstract class Client {
 	 * @param listener to add
 	 */
 	public void registerListener(ClientListener listener) {
-		listeners.add(listener);
+		this.listeners.add(listener);
 	}
 	
 	/**
@@ -127,7 +140,7 @@ public abstract class Client {
 	 * @param listener to add
 	 */
 	public void registerListener(IOHandlerListener listener) {
-		ioListeners.add(listener);
+		this.ioListeners.add(listener);
 	}
 	
 	/**
@@ -135,8 +148,8 @@ public abstract class Client {
 	 * @param listener to remove
 	 */
 	public void removeListener(ClientListener listener) {
-		if(listeners.contains(listener)) {
-			listeners.remove(listener);
+		if(this.listeners.contains(listener)) {
+			this.listeners.remove(listener);
 		}
 	}
 	
@@ -145,15 +158,15 @@ public abstract class Client {
 	 * @param listener to remove
 	 */
 	public void removeListener(IOHandlerListener listener) {
-		if(ioListeners.contains(listener)) {
-			ioListeners.remove(listener);
+		if(this.ioListeners.contains(listener)) {
+			this.ioListeners.remove(listener);
 			this.ioHandler.removeListener(listener);
 		}
 	}
 	
 	/**
 	 * Calls the respective function of each listener depending on the event type.<br>
-	 * Optionally Propagates additional info such as exceptions.
+	 * Optionally propagates additional info such as exceptions.
 	 * 
 	 * @param type of event that occured
 	 * @param args optional additional data
@@ -168,10 +181,10 @@ public abstract class Client {
 	private void notifyListeners(EventType type, Object... args) {
 		switch(type) {
 			case CONNECTION:
-				listeners.forEach(l -> l.onConnection());
+				this.listeners.forEach(l -> l.onConnectionCreation());
 				break;
 			case CONNECTION_SUCCESS:
-				listeners.forEach(l -> l.onConnectionSuccess());
+				this.listeners.forEach(l -> l.onConnectionSuccess());
 				break;
 			case CONNECTION_FAILED:
 				if(args.length == 0) {
@@ -179,10 +192,10 @@ public abstract class Client {
 				} else if(!(args[0] instanceof Exception)) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 				}
-				listeners.forEach(l -> l.onConnectionFailed((Exception)args[0]));
+				this.listeners.forEach(l -> l.onConnectionFailed((Exception)args[0]));
 				break;
 			case CLOSE:
-				listeners.forEach(l -> l.onClose());
+				this.listeners.forEach(l -> l.onCloseRequested());
 				break;
 			case CLOSE_FAILED:
 				if(args.length == 0) {
@@ -190,10 +203,10 @@ public abstract class Client {
 				} else if(args.length == 0 || !(args[0] instanceof Exception)) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 				}
-				listeners.forEach(l -> l.onCloseFailed((Exception)args[0]));
+				this.listeners.forEach(l -> l.onCloseFailed((Exception)args[0]));
 				break;
 			case CLOSE_SUCCESS:
-				listeners.forEach(l -> l.onCloseSuccess());
+				this.listeners.forEach(l -> l.onCloseSuccess());
 				break;
 			default:
 				break;

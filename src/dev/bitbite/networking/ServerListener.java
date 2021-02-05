@@ -79,4 +79,9 @@ public abstract class ServerListener {
 	 */
 	public void onCommunicationHandlerCloseFailed(Exception exception) {}
 	
+	/**
+	 * Will be fired if the ServerSocket is closed while Client tried to connect.
+	 * @param exception which is thrown during the process of client acceptance.
+	 */
+	public void onSocketClosed(Exception exception) {}
 }

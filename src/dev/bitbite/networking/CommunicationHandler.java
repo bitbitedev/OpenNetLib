@@ -8,7 +8,7 @@ import dev.bitbite.networking.Server.EventType;
 
 /**
  * Manages the Communication with a client by handling its IO.
- * Runs in its own Thread and names it with the associated remote socket address.
+ * Runs in its own Thread and names it with the associated remote socket address (CommunicationHandler@<socket adress>).
  * 
  * @version 0.0.1-alpha
  */
@@ -55,7 +55,7 @@ public class CommunicationHandler extends Thread {
 	
 	/**
 	 * Gets called by the IOHandler when data is received from the client
-	 * and propagates the data to the server.
+	 * and forwards the data to the server.
 	 * 
 	 * @param data received from the client
 	 */
@@ -80,7 +80,7 @@ public class CommunicationHandler extends Thread {
 	}
 	
 	/**
-	 * @return the IOHandler associates with thie CommunicationHandler
+	 * @return the IOHandler associated with the CommunicationHandler
 	 */
 	public IOHandler getIOHandler() {
 		return this.ioHandler;

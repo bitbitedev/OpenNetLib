@@ -49,7 +49,7 @@ public class IOHandler {
 	
 	/**
 	 * Initializes the IOHandler with the given Streams and read-Callback method.<br>
-	 * It also starts a Thread which listens for incomming data from the inputStream.
+	 * It also starts a Thread which listens for incoming data from the inputStream.
 	 * That is done so the IOHandler is non-blocking.
 	 * @param inputStream, the inputStream to read the data from
 	 * @param outputStream, the outputStream to write to
@@ -67,19 +67,19 @@ public class IOHandler {
 		this.reader = new BufferedReader(new InputStreamReader(inputStream));
 		this.listeners = new ArrayList<IOHandlerListener>();
 		this.inputListener = new Thread(()->{
-			notifyListeners(EventType.DATA_READ_START);
+			this.notifyListeners(EventType.DATA_READ_START);
 			while(!Thread.interrupted()) {
 				try {
 					String message = reader.readLine();
 					onRead.accept(message);
 				} catch (SocketException e) {
-					notifyListeners(EventType.DATA_READ_FAILED, e);
+					this.notifyListeners(EventType.DATA_READ_FAILED, e);
 					Thread.currentThread().interrupt();
 				} catch (IOException e) {
-					notifyListeners(EventType.DATA_READ_FAILED, e);
+					this.notifyListeners(EventType.DATA_READ_FAILED, e);
 				}
 			}
-			notifyListeners(EventType.DATA_READ_END);
+			this.notifyListeners(EventType.DATA_READ_END);
 		});
 		this.inputListener.setName("IO InputListener");
 		this.inputListener.start();
@@ -91,14 +91,14 @@ public class IOHandler {
 	 * @version 0.0.2-alpha
 	 */
 	public void close() throws IOException {
-		notifyListeners(EventType.CLOSE_START);
+		this.notifyListeners(EventType.CLOSE_START);
 		try {
 			this.reader.close();
 			this.writer.close();
 		} catch(Exception e) {
-			notifyListeners(EventType.CLOSE_FAILED, e);
+			this.notifyListeners(EventType.CLOSE_FAILED, e);
 		}
-		notifyListeners(EventType.CLOSE_END);
+		this.notifyListeners(EventType.CLOSE_END);
 	}
 	
 	/**
@@ -108,14 +108,13 @@ public class IOHandler {
 	 * @see java.io.PrintWriter
 	 */
 	public void write(String data) {
-		notifyListeners(EventType.WRITE, data);
+		this.notifyListeners(EventType.WRITE, data);
 		try {
-			this.writer.write(data+"\n");
-			this.writer.flush();
+			this.writer.println(data);
 		} catch(Exception e) {
-			notifyListeners(EventType.WRITE_FAILED, e);
+			this.notifyListeners(EventType.WRITE_FAILED, e);
 		}
-		notifyListeners(EventType.WRITE_END);
+		this.notifyListeners(EventType.WRITE_END);
 	}
 
 	/**
@@ -123,7 +122,7 @@ public class IOHandler {
 	 * @param listener to add
 	 */
 	public void registerListener(IOHandlerListener listener) {
-		listeners.add(listener);
+		this.listeners.add(listener);
 	}
 	
 	/**
@@ -131,8 +130,8 @@ public class IOHandler {
 	 * @param listener to remove
 	 */
 	public void removeListener(IOHandlerListener listener) {
-		if(listeners.contains(listener)) {
-			listeners.remove(listener);
+		if(this.listeners.contains(listener)) {
+			this.listeners.remove(listener);
 		}
 	}
 	

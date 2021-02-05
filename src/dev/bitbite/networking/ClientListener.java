@@ -13,7 +13,7 @@ public abstract class ClientListener {
 	/**
 	 * Will be called before the Client tries to connect to the server
 	 */
-	public void onConnection() {}
+	public void onConnectionCreation() {}
 	/**
 	 * Will be called if the connection to the server was successful
 	 */
@@ -25,9 +25,9 @@ public abstract class ClientListener {
 	public void onConnectionFailed(Exception e) {}
 	
 	/**
-	 * Will be called before the disconnection and closing process es being initiated
+	 * Will be called before the disconnection and closing processes being initiated
 	 */
-	public void onClose() {}
+	public void onCloseRequested() {}
 	/**
 	 * Will be called after finishing the disconnection process
 	 */

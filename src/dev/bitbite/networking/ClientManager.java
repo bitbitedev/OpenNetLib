@@ -12,7 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * 
  * @version 0.0.1-alpha
  */
-public class ClientManager extends Thread{
+public class ClientManager extends Thread {
 
 	private final Server server;
 	private CopyOnWriteArrayList<CommunicationHandler> communicationHandler;
@@ -50,6 +50,7 @@ public class ClientManager extends Thread{
 					this.server.notifyListeners(Server.EventType.ACCEPT_FAILED, e);
 				}
 				if(e.getMessage().contentEquals("Socket is closed")) {
+					this.server.notifyListeners(Server.EventType.SOCKET_CLOSED, e);
 					Thread.currentThread().interrupt();
 				}
 			}
