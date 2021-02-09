@@ -43,7 +43,7 @@ public class DataPreProcessor {
 	 * Appends a layer at the end of the list
 	 * @param layer to add
 	 */
-	protected void addLayer(DataProcessingLayer layer) {
+	public void addLayer(DataProcessingLayer layer) {
 		layers.add(layer);
 	}
 	
@@ -51,7 +51,7 @@ public class DataPreProcessor {
 	 * Removes a layer from the list
 	 * @param layer to remove
 	 */
-	protected void removeLayer(DataProcessingLayer layer) {
+	public void removeLayer(DataProcessingLayer layer) {
 		layers.remove(layer);
 	}
 	
@@ -59,7 +59,7 @@ public class DataPreProcessor {
 	 * Returns the list of layers
 	 * @return ArrayList of {@link DataProcessingLayer}s
 	 */
-	protected ArrayList<DataProcessingLayer> getLayers(){
+	public ArrayList<DataProcessingLayer> getLayers(){
 		return this.layers;
 	}
 	
