@@ -8,7 +8,7 @@ import dev.bitbite.networking.Server.EventType;
 
 /**
  * Manages the Communication with a client by handling its IO.
- * Runs in its own Thread and names it with the associated remote socket address (CommunicationHandler@<socket adress>).
+ * Runs in its own Thread and names it with the associated remote socket address (CommunicationHandler@[socket adress]).
  * 
  * @version 0.0.1-alpha
  */
@@ -48,19 +48,20 @@ public class CommunicationHandler extends Thread {
 			this.clientSocket.close();
 		} catch(Exception e) {
 			this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE_FAILED, e);
-			e.printStackTrace();
 		}
 		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE_END);
 	}
 	
 	/**
-	 * Gets called by the IOHandler when data is received from the client
-	 * and forwards the data to the server.
+	 * Gets called by the IOHandler when data is received from the client.
+	 * It lets the {@link DataPreProcessor} process the data and then
+	 *  forwards the data to the server.
 	 * 
 	 * @param data received from the client
 	 */
 	protected void processReceivedData(String data) {
-		this.clientManager.getServer().processReceivedData(getIP(), data);
+		data = this.clientManager.getServer().getDataPreProcessor().process(data);
+		this.clientManager.getServer().processReceivedData(this.getIP(), data);
 	}
 	
 	/**
@@ -73,7 +74,7 @@ public class CommunicationHandler extends Thread {
 	
 	/**
 	 * Registers a list of listeners to the underlying IOHandler
-	 * @param listeners to add
+	 * @param listener to add
 	 */
 	public void registerListener(ArrayList<IOHandlerListener> listener) {
 		listener.forEach(l -> this.ioHandler.registerListener(l));

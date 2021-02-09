@@ -8,10 +8,17 @@ import java.util.ArrayList;
  * The server must be started using {@link Server#start()} 
  * for clients to be able to connect. <br>
  * Shutting down the server can be done using {@link Server#close()}<br>
- * Incomming data from any client will be propagated to {@link Server#processReceivedData(String, String)}
- * containing the clients address of the client the data came from.<br>
- * In order to send data to the client you must request the proper {@link CommunicationHandler} using the servers {@link ClientManager}
+ * Incomming data from any client will be processed by the DataProcessingLayers and then
+ * propagated to {@link Server#processReceivedData(String, String)}
+ * containing the clients address of the client the data came from.
+ * In order to send data to the client you must request the proper 
+ * {@link CommunicationHandler} using the servers {@link ClientManager}
  * ({@link ClientManager#getCommunicationHandlerByIP(String)})
+ *
+ * @see ClientManager
+ * @see CommunicationHandler
+ * @see DataProcessingLayer
+ * @see DataPreProcessor
  *
  * @version 0.0.1-alpha
  */
@@ -20,6 +27,7 @@ public abstract class Server {
 	public final int PORT;
 	private ServerSocket serverSocket;
 	private ClientManager clientManager;
+	private DataPreProcessor dataPreProcessor;
 	private ArrayList<ServerListener> listeners;
 	private ArrayList<IOHandlerListener> ioListeners;
 	
@@ -55,6 +63,7 @@ public abstract class Server {
 		this.PORT = port;
 		this.clientManager = new ClientManager(this);
 		this.clientManager.setName("ClientManager");
+		this.dataPreProcessor = new DataPreProcessor();
 		this.listeners = new ArrayList<ServerListener>();
 		this.ioListeners = new ArrayList<IOHandlerListener>();
 	}
@@ -92,6 +101,14 @@ public abstract class Server {
 	protected abstract void processReceivedData(String clientAddress, String data);
 
 	/**
+	 * Returns the DataPreProcessor of this server object.
+	 * @return the DataPreProcessor of this server object
+	 */
+	protected DataPreProcessor getDataPreProcessor() {
+		return this.dataPreProcessor;
+	}
+	
+	/**
 	 * Registers a ClientListener
 	 * @param listener to add
 	 */
@@ -100,7 +117,7 @@ public abstract class Server {
 	}
 	
 	/**
-	 * Registers a IOHandlerListener
+	 * Registers an IOHandlerListener
 	 * @param listener to add
 	 */
 	public void registerListener(IOHandlerListener listener) {
