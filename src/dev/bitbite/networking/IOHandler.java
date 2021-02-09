@@ -110,7 +110,8 @@ public class IOHandler {
 	public void write(String data) {
 		this.notifyListeners(EventType.WRITE, data);
 		try {
-			this.writer.println(data);
+			this.writer.write(data+"\n");
+			this.writer.flush();
 		} catch(Exception e) {
 			this.notifyListeners(EventType.WRITE_FAILED, e);
 		}
