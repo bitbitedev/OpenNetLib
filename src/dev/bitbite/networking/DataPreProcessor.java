@@ -3,7 +3,7 @@ package dev.bitbite.networking;
 import java.util.ArrayList;
 
 /**
- * Keeps track of all {@link DataProcessingLayer}s at processes
+ * Keeps track of all {@link DataProcessingLayer}s and processes
  * data by passing it to each layer and returning its result.
  * Layers will process the data in the order they are registered.
  * 
@@ -16,7 +16,7 @@ public class DataPreProcessor {
 	private ArrayList<DataProcessingLayer> layers;
 	
 	/**
-	 * Instatiates the DataPreProcessor
+	 * Instantiates the DataPreProcessor
 	 */
 	protected DataPreProcessor() {
 		layers = new ArrayList<DataProcessingLayer>();
@@ -45,6 +45,25 @@ public class DataPreProcessor {
 	 */
 	public void addLayer(DataProcessingLayer layer) {
 		layers.add(layer);
+	}
+
+	/**
+	 * Inserts a layer at the specified index. Shifts the layer currently at that position (if any) and
+	 * any subsequent layers to the right (adds one to their indices).
+	 * @param index to add the layer at
+	 * @param layer to add
+	 */
+	public void addLayer(int index, DataProcessingLayer layer) {
+		layers.add(index, layer);
+	}
+	
+	/**
+	 * Returns a layer at a specified position in the list.
+	 * @param index of the layer to get
+	 * @return layer at given index
+	 */
+	public DataProcessingLayer getLayerAt(int index) {
+		return layers.get(index);
 	}
 	
 	/**
