@@ -2,6 +2,9 @@ package dev.bitbite.networking;
 
 import java.util.ArrayList;
 
+import dev.bitbite.networking.exceptions.LayerDisableFailedException;
+import dev.bitbite.networking.exceptions.LayerInitFailedException;
+
 /**
  * Keeps track of all {@link DataProcessingLayer}s and processes
  * data by passing it to each layer and returning its result.
@@ -9,7 +12,7 @@ import java.util.ArrayList;
  * 
  * @see DataProcessingLayer
  * 
- * @version 0.0.1-alpha
+ * @version 0.0.2-alpha
  */
 public class DataPreProcessor {
 
@@ -29,8 +32,6 @@ public class DataPreProcessor {
 	 * 
 	 * @param data to process
 	 * @return processed data
-	 * 
-	 * @version 0.0.1-alpha
 	 */
 	protected String process(String data) {
 		for(DataProcessingLayer layer : layers) {
@@ -40,8 +41,28 @@ public class DataPreProcessor {
 	}
 	
 	/**
+	 * Initializes the {@link DataProcessingLayer}s
+	 * @throws LayerInitFailedException if {@link DataProcessingLayer#onEnable()} returns false
+	 */
+	public void initLayers() throws LayerInitFailedException {
+		for(DataProcessingLayer l : this.layers) {
+			if(!l.onEnable()) throw new LayerInitFailedException(l.getClass().getName());
+		}
+	}
+	
+	/**
+	 * Deactivates the {@link DataProcessingLayer}s
+	 * @throws LayerDisableFailedException if {@link DataProcessingLayer#onDisable()} returns false
+	 */
+	public void shutdown() throws LayerDisableFailedException {
+		for(DataProcessingLayer l : this.layers) {
+			if(!l.onDisable()) throw new LayerDisableFailedException(l.getClass().getName());
+		}
+	}
+	
+	/**
 	 * Appends a layer at the end of the list
-	 * @param layer to add
+	 * @param {@link DataProcessingLayer} to add
 	 */
 	public void addLayer(DataProcessingLayer layer) {
 		layers.add(layer);
@@ -51,7 +72,7 @@ public class DataPreProcessor {
 	 * Inserts a layer at the specified index. Shifts the layer currently at that position (if any) and
 	 * any subsequent layers to the right (adds one to their indices).
 	 * @param index to add the layer at
-	 * @param layer to add
+	 * @param {@link DataProcessingLayer} to add
 	 */
 	public void addLayer(int index, DataProcessingLayer layer) {
 		layers.add(index, layer);
@@ -60,7 +81,7 @@ public class DataPreProcessor {
 	/**
 	 * Returns a layer at a specified position in the list.
 	 * @param index of the layer to get
-	 * @return layer at given index
+	 * @return {@link DataProcessingLayer} at given index
 	 */
 	public DataProcessingLayer getLayerAt(int index) {
 		return layers.get(index);
@@ -68,7 +89,7 @@ public class DataPreProcessor {
 	
 	/**
 	 * Removes a layer from the list
-	 * @param layer to remove
+	 * @param {@link DataProcessingLayer} to remove
 	 */
 	public void removeLayer(DataProcessingLayer layer) {
 		layers.remove(layer);

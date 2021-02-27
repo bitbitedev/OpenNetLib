@@ -3,12 +3,14 @@ package dev.bitbite.networking;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 
+import dev.bitbite.networking.exceptions.LayerDisableFailedException;
+
 /**
  * Represents an abstract implementation of the server-side connection.<br>
  * The server must be started using {@link Server#start()} 
  * for clients to be able to connect. <br>
  * Shutting down the server can be done using {@link Server#close()}<br>
- * Incomming data from any client will be processed by the DataProcessingLayers and then
+ * Incoming data from any client will be processed by the DataProcessingLayers and then
  * propagated to {@link Server#processReceivedData(String, String)}
  * containing the clients address of the client the data came from.
  * In order to send data to the client you must request the proper 
@@ -20,7 +22,7 @@ import java.util.ArrayList;
  * @see DataProcessingLayer
  * @see DataPreProcessor
  *
- * @version 0.0.1-alpha
+ * @version 0.0.2-alpha
  */
 public abstract class Server {
 
@@ -69,27 +71,32 @@ public abstract class Server {
 	}
 	
 	/**
-	 * Opens a serversocket and starts listening on the specified port
-	 * @return true if the server has been started successfully
+	 * Opens a {@link ServerSocket}, initializes the {@link DataProcessingLayer}s and starts listening on the specified port
 	 */
-	public boolean start() {
+	public void start() {
 		notifyListeners(EventType.START);
 		try {
 			this.serverSocket = new ServerSocket(this.PORT);
+			this.dataPreProcessor.initLayers();
 		} catch(Exception e) {
-			notifyListeners(EventType.START_FAILED);
+			this.notifyListeners(EventType.START_FAILED, e);
 		}
 		this.clientManager.start();
-		notifyListeners(EventType.START_SUCCESS);
-		return true;
+		this.notifyListeners(EventType.START_SUCCESS);
 	}
 	
 	/**
-	 * Initiates the closing process of the Server
-	 * @return true if the closing process has been completed successfully
+	 * Initiates the closing process of the Server with closing the {@link ClientManager} and disabling the {@link DataProcessingLayer}s
 	 */
-	public boolean close() {
-		return this.clientManager.close();
+	public void close() {
+		this.notifyListeners(EventType.CLOSE);
+		this.clientManager.close();
+		try {
+			this.dataPreProcessor.shutdown();
+		} catch (LayerDisableFailedException e) {
+			this.notifyListeners(EventType.CLOSE_FAILED, e);
+		}
+		this.notifyListeners(EventType.CLOSE_END);
 	}
 	
 	/**
@@ -171,8 +178,6 @@ public abstract class Server {
 	 * whose types do not match the expected types of the listeners eventfunction
 	 * 
 	 * @see ServerListener
-	 * 
-	 * @version 0.0.2-alpha
 	 */
 	protected void notifyListeners(EventType type, Object... args) {
 		switch(type) {
