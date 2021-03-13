@@ -19,7 +19,12 @@ public class DataPreProcessor {
 	private ArrayList<DataProcessingLayer> incomingDataProcessingLayers;
 	private ArrayList<DataProcessingLayer> outgoingDataProcessingLayers;
 	
-	enum TransferMode {
+	/**
+	 * The Transfer directions data can travel
+	 *
+	 * @version 0.0.1-alpha
+	 */
+	public enum TransferMode {
 		IN, OUT;
 	}
 	
@@ -36,6 +41,7 @@ public class DataPreProcessor {
 	 * If no DataProcessingLayer is registered, data will stay as it is
 	 * and returns the processed data
 	 * 
+	 * @param mode - transfer direction of the data 
 	 * @param data to process
 	 * @return processed data
 	 */
@@ -80,6 +86,8 @@ public class DataPreProcessor {
 	
 	/**
 	 * Appends a layer at the end of the list
+	 * 
+	 * @param mode - the transfermode the layer is designed for
 	 * @param {@link DataProcessingLayer} to add
 	 */
 	public void addLayer(TransferMode mode, DataProcessingLayer layer) {
@@ -90,6 +98,8 @@ public class DataPreProcessor {
 	/**
 	 * Inserts a layer at the specified index. Shifts the layer currently at that position (if any) and
 	 * any subsequent layers to the right (adds one to their indices).
+	 * 
+	 * @param mode - the transfermode the layer is designed for
 	 * @param index to add the layer at
 	 * @param {@link DataProcessingLayer} to add
 	 */
@@ -99,7 +109,8 @@ public class DataPreProcessor {
 	}
 	
 	/**
-	 * Returns a layer at a specified position in the list.
+	 * Returns a layer of the specified transfermode at a specified position in the list.
+	 * @param mode - the transfermode of the layer to get
 	 * @param index of the layer to get
 	 * @return {@link DataProcessingLayer} at given index
 	 */
@@ -111,6 +122,7 @@ public class DataPreProcessor {
 	
 	/**
 	 * Removes a layer from the list
+	 * @param mode - the transfermode of the layer to remove
 	 * @param {@link DataProcessingLayer} to remove
 	 */
 	public void removeLayer(TransferMode mode, DataProcessingLayer layer) {
@@ -120,6 +132,7 @@ public class DataPreProcessor {
 	
 	/**
 	 * Returns the list of layers
+	 * @param mode - the transfermode of the layer to remove
 	 * @return ArrayList of {@link DataProcessingLayer}s
 	 */
 	public ArrayList<DataProcessingLayer> getLayers(TransferMode mode) {

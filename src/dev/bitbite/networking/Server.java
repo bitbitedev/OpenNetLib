@@ -3,6 +3,7 @@ package dev.bitbite.networking;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 
+import dev.bitbite.networking.DataPreProcessor.TransferMode;
 import dev.bitbite.networking.exceptions.LayerDisableFailedException;
 
 /**
@@ -107,12 +108,10 @@ public abstract class Server {
 	 */
 	protected abstract void processReceivedData(String clientAddress, String data);
 
-	/**
-	 * Returns the DataPreProcessor of this server object.
-	 * @return the DataPreProcessor of this server object
-	 */
-	protected DataPreProcessor getDataPreProcessor() {
-		return this.dataPreProcessor;
+	public boolean send(String clientAddress, String data) {
+		data = this.getDataPreProcessor().process(TransferMode.OUT, data);
+		this.clientManager.getCommunicationHandlerByIP(clientAddress).send(data);
+		return true;
 	}
 	
 	/**
@@ -149,22 +148,6 @@ public abstract class Server {
 		if(ioListeners.contains(listener)) {
 			ioListeners.remove(listener);
 		}
-	}
-	
-	/**
-	 * Returns a list of all ServerListeners registered at the server
-	 * @return the list of ServerListeners
-	 */
-	public ArrayList<ServerListener> getServerListeners(){
-		return this.listeners;
-	}
-	
-	/**
-	 * Returns a list of all IOHandlers registered at the server
-	 * @return the list of IOHandlers
-	 */
-	public ArrayList<IOHandlerListener> getIOHandlerListeners(){
-		return this.ioListeners;
 	}
 	
 	/**
@@ -270,5 +253,29 @@ public abstract class Server {
 	 */
 	protected ServerSocket getServerSocket() {
 		return this.serverSocket;
+	}
+	
+	/**
+	 * Returns a list of all ServerListeners registered at the server
+	 * @return the list of ServerListeners
+	 */
+	public ArrayList<ServerListener> getServerListeners(){
+		return this.listeners;
+	}
+	
+	/**
+	 * Returns a list of all IOHandlers registered at the server
+	 * @return the list of IOHandlers
+	 */
+	public ArrayList<IOHandlerListener> getIOHandlerListeners(){
+		return this.ioListeners;
+	}
+	
+	/**
+	 * Returns the DataPreProcessor of this server object.
+	 * @return the DataPreProcessor of this server object
+	 */
+	protected DataPreProcessor getDataPreProcessor() {
+		return this.dataPreProcessor;
 	}
 }

@@ -53,6 +53,14 @@ public class CommunicationHandler extends Thread {
 	}
 	
 	/**
+	 * Sends data to the client
+	 * @param data to send
+	 */
+	protected void send(String data) {
+		this.ioHandler.write(data);
+	}
+	
+	/**
 	 * Gets called by the IOHandler when data is received from the client.
 	 * It lets the {@link DataPreProcessor} process the data and then
 	 *  forwards the data to the server.
@@ -78,13 +86,6 @@ public class CommunicationHandler extends Thread {
 	 */
 	public void registerListener(ArrayList<IOHandlerListener> listener) {
 		listener.forEach(l -> this.ioHandler.registerListener(l));
-	}
-	
-	/**
-	 * @return the IOHandler associated with the CommunicationHandler
-	 */
-	public IOHandler getIOHandler() {
-		return this.ioHandler;
 	}
 	
 	/**
