@@ -12,17 +12,23 @@ import dev.bitbite.networking.exceptions.LayerInitFailedException;
  * 
  * @see DataProcessingLayer
  * 
- * @version 0.0.2-alpha
+ * @version 0.0.3-alpha
  */
 public class DataPreProcessor {
 
-	private ArrayList<DataProcessingLayer> layers;
+	private ArrayList<DataProcessingLayer> incomingDataProcessingLayers;
+	private ArrayList<DataProcessingLayer> outgoingDataProcessingLayers;
+	
+	enum TransferMode {
+		IN, OUT;
+	}
 	
 	/**
 	 * Instantiates the DataPreProcessor
 	 */
 	protected DataPreProcessor() {
-		layers = new ArrayList<DataProcessingLayer>();
+		this.incomingDataProcessingLayers = new ArrayList<DataProcessingLayer>();
+		this.outgoingDataProcessingLayers = new ArrayList<DataProcessingLayer>();
 	}
 	
 	/**
@@ -33,9 +39,15 @@ public class DataPreProcessor {
 	 * @param data to process
 	 * @return processed data
 	 */
-	protected String process(String data) {
-		for(DataProcessingLayer layer : layers) {
-			data = layer.process(data);
+	protected String process(TransferMode mode, String data) {
+		if(mode == TransferMode.IN) {
+			for(DataProcessingLayer layer : this.incomingDataProcessingLayers) {
+				data = layer.process(data);
+			}
+		} else if(mode == TransferMode.OUT) {
+			for(DataProcessingLayer layer : this.outgoingDataProcessingLayers) {
+				data = layer.process(data);
+			}
 		}
 		return data;
 	}
@@ -45,7 +57,10 @@ public class DataPreProcessor {
 	 * @throws LayerInitFailedException if {@link DataProcessingLayer#onEnable()} returns false
 	 */
 	public void initLayers() throws LayerInitFailedException {
-		for(DataProcessingLayer l : this.layers) {
+		for(DataProcessingLayer l : this.incomingDataProcessingLayers) {
+			if(!l.onEnable()) throw new LayerInitFailedException(l.getClass().getName());
+		}
+		for(DataProcessingLayer l : this.outgoingDataProcessingLayers) {
 			if(!l.onEnable()) throw new LayerInitFailedException(l.getClass().getName());
 		}
 	}
@@ -55,7 +70,10 @@ public class DataPreProcessor {
 	 * @throws LayerDisableFailedException if {@link DataProcessingLayer#onDisable()} returns false
 	 */
 	public void shutdown() throws LayerDisableFailedException {
-		for(DataProcessingLayer l : this.layers) {
+		for(DataProcessingLayer l : this.incomingDataProcessingLayers) {
+			if(!l.onDisable()) throw new LayerDisableFailedException(l.getClass().getName());
+		}
+		for(DataProcessingLayer l : this.outgoingDataProcessingLayers) {
 			if(!l.onDisable()) throw new LayerDisableFailedException(l.getClass().getName());
 		}
 	}
@@ -64,8 +82,9 @@ public class DataPreProcessor {
 	 * Appends a layer at the end of the list
 	 * @param {@link DataProcessingLayer} to add
 	 */
-	public void addLayer(DataProcessingLayer layer) {
-		layers.add(layer);
+	public void addLayer(TransferMode mode, DataProcessingLayer layer) {
+		if(mode == TransferMode.IN) this.incomingDataProcessingLayers.add(layer);
+		if(mode == TransferMode.OUT) this.outgoingDataProcessingLayers.add(layer);
 	}
 
 	/**
@@ -74,8 +93,9 @@ public class DataPreProcessor {
 	 * @param index to add the layer at
 	 * @param {@link DataProcessingLayer} to add
 	 */
-	public void addLayer(int index, DataProcessingLayer layer) {
-		layers.add(index, layer);
+	public void addLayer(TransferMode mode, int index, DataProcessingLayer layer) {
+		if(mode == TransferMode.IN) this.incomingDataProcessingLayers.add(index, layer);
+		if(mode == TransferMode.OUT) this.outgoingDataProcessingLayers.add(index, layer);
 	}
 	
 	/**
@@ -83,24 +103,29 @@ public class DataPreProcessor {
 	 * @param index of the layer to get
 	 * @return {@link DataProcessingLayer} at given index
 	 */
-	public DataProcessingLayer getLayerAt(int index) {
-		return layers.get(index);
+	public DataProcessingLayer getLayerAt(TransferMode mode, int index) {
+		if(mode == TransferMode.IN) return this.incomingDataProcessingLayers.get(index);
+		if(mode == TransferMode.OUT) return this.outgoingDataProcessingLayers.get(index);
+		return null;
 	}
 	
 	/**
 	 * Removes a layer from the list
 	 * @param {@link DataProcessingLayer} to remove
 	 */
-	public void removeLayer(DataProcessingLayer layer) {
-		layers.remove(layer);
+	public void removeLayer(TransferMode mode, DataProcessingLayer layer) {
+		if(mode == TransferMode.IN) this.incomingDataProcessingLayers.remove(layer);
+		if(mode == TransferMode.OUT) this.outgoingDataProcessingLayers.remove(layer); 
 	}
 	
 	/**
 	 * Returns the list of layers
 	 * @return ArrayList of {@link DataProcessingLayer}s
 	 */
-	public ArrayList<DataProcessingLayer> getLayers(){
-		return this.layers;
+	public ArrayList<DataProcessingLayer> getLayers(TransferMode mode) {
+		if(mode == TransferMode.IN) return this.incomingDataProcessingLayers;
+		if(mode == TransferMode.OUT) return this.outgoingDataProcessingLayers;
+		return null;
 	}
 	
 }

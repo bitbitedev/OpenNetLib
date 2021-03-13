@@ -60,7 +60,7 @@ public class CommunicationHandler extends Thread {
 	 * @param data received from the client
 	 */
 	protected void processReceivedData(String data) {
-		data = this.clientManager.getServer().getDataPreProcessor().process(data);
+		data = this.clientManager.getServer().getDataPreProcessor().process(DataPreProcessor.TransferMode.IN, data);
 		this.clientManager.getServer().processReceivedData(this.getIP(), data);
 	}
 	
