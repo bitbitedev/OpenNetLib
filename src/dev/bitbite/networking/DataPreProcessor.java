@@ -88,7 +88,7 @@ public class DataPreProcessor {
 	 * Appends a layer at the end of the list
 	 * 
 	 * @param mode - the transfermode the layer is designed for
-	 * @param {@link DataProcessingLayer} to add
+	 * @param layer - {@link DataProcessingLayer} to add
 	 */
 	public void addLayer(TransferMode mode, DataProcessingLayer layer) {
 		if(mode == TransferMode.IN) this.incomingDataProcessingLayers.add(layer);
@@ -101,7 +101,7 @@ public class DataPreProcessor {
 	 * 
 	 * @param mode - the transfermode the layer is designed for
 	 * @param index to add the layer at
-	 * @param {@link DataProcessingLayer} to add
+	 * @param layer - {@link DataProcessingLayer} to add
 	 */
 	public void addLayer(TransferMode mode, int index, DataProcessingLayer layer) {
 		if(mode == TransferMode.IN) this.incomingDataProcessingLayers.add(index, layer);
@@ -112,7 +112,7 @@ public class DataPreProcessor {
 	 * Returns a layer of the specified transfermode at a specified position in the list.
 	 * @param mode - the transfermode of the layer to get
 	 * @param index of the layer to get
-	 * @return {@link DataProcessingLayer} at given index
+	 * @return layer - {@link DataProcessingLayer} at given index
 	 */
 	public DataProcessingLayer getLayerAt(TransferMode mode, int index) {
 		if(mode == TransferMode.IN) return this.incomingDataProcessingLayers.get(index);
@@ -123,7 +123,7 @@ public class DataPreProcessor {
 	/**
 	 * Removes a layer from the list
 	 * @param mode - the transfermode of the layer to remove
-	 * @param {@link DataProcessingLayer} to remove
+	 * @param layer - {@link DataProcessingLayer} to remove
 	 */
 	public void removeLayer(TransferMode mode, DataProcessingLayer layer) {
 		if(mode == TransferMode.IN) this.incomingDataProcessingLayers.remove(layer);
