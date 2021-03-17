@@ -115,6 +115,14 @@ public abstract class Server {
 	}
 	
 	/**
+	 * Sends the data to all connected clients.
+	 * @param data to broadcast
+	 */
+	public void broadcast(String data) {
+		this.clientManager.getCommunicationHandler().forEach(ch -> ch.send(data));
+	}
+	
+	/**
 	 * Registers a ClientListener
 	 * @param listener to add
 	 */

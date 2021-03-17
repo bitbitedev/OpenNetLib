@@ -61,8 +61,6 @@ public class ClientManager extends Thread {
 	/**
 	 * Closes all client connection and the serversocket itself
 	 * @return true if the closing process finishes successfully
-	 * 
-	 * @version 0.0.1-alpha
 	 */
 	public boolean close() {
 		this.server.notifyListeners(Server.EventType.CLOSE);
@@ -99,7 +97,15 @@ public class ClientManager extends Thread {
 	 * Returns the server object related to this clientmanager
 	 * @return the serverobject
 	 */
-	public Server getServer() {
+	protected Server getServer() {
 		return this.server;
+	}
+
+	/**
+	 * Returns a list of CommunicationHandlers
+	 * @return a list of CommunicationHandlers
+	 */
+	protected CopyOnWriteArrayList<CommunicationHandler> getCommunicationHandler() {
+		return this.communicationHandler;
 	}
 }

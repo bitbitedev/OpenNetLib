@@ -121,6 +121,14 @@ public abstract class Client {
 	}
 	
 	/**
+	 * Sends data to the Server
+	 * @param data to send
+	 */
+	public void send(String data) {
+		this.ioHandler.write(data);
+	}
+	
+	/**
 	 * This function will be called once the client receives data from the server.
 	 * 
 	 * @param data sent by the server
