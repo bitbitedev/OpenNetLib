@@ -71,12 +71,17 @@ public class IOHandler {
 			while(!Thread.interrupted()) {
 				try {
 					String message = reader.readLine();
+					if(message == null) {
+						Thread.currentThread().interrupt();
+						continue;
+					}
 					onRead.accept(message);
 				} catch (SocketException e) {
 					this.notifyListeners(EventType.DATA_READ_FAILED, e);
 					Thread.currentThread().interrupt();
-				} catch (IOException e) {
+				} catch (Exception e) {
 					this.notifyListeners(EventType.DATA_READ_FAILED, e);
+					Thread.currentThread().interrupt();
 				}
 			}
 			this.notifyListeners(EventType.DATA_READ_END);
