@@ -1,5 +1,6 @@
 package dev.bitbite.networking;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 
@@ -28,11 +29,11 @@ import dev.bitbite.networking.exceptions.LayerDisableFailedException;
 public abstract class Server {
 
 	public final int PORT;
-	private ServerSocket serverSocket;
-	private ClientManager clientManager;
-	private DataPreProcessor dataPreProcessor;
-	private ArrayList<ServerListener> listeners;
-	private ArrayList<IOHandlerListener> ioListeners;
+	protected ServerSocket serverSocket;
+	protected ClientManager clientManager;
+	protected DataPreProcessor dataPreProcessor;
+	protected ArrayList<ServerListener> listeners;
+	protected ArrayList<IOHandlerListener> ioListeners;
 	
 	/**
 	 * The different event-types, which occur in the server, listeners can listen on
@@ -77,13 +78,23 @@ public abstract class Server {
 	public void start() {
 		notifyListeners(EventType.START);
 		try {
-			this.serverSocket = new ServerSocket(this.PORT);
+			this.openServerSocket();
 			this.dataPreProcessor.initLayers();
 		} catch(Exception e) {
 			this.notifyListeners(EventType.START_FAILED, e);
+			return;
 		}
 		this.clientManager.start();
 		this.notifyListeners(EventType.START_SUCCESS);
+	}
+	
+	/**
+	 * Opens the {@link ServerSocket}. 
+	 * Moved to a different function to make it easier to replace the ServerSocket implementation.
+	 * @throws IOException when the process of opening the ServerSocket fails.
+	 */
+	protected void openServerSocket() throws IOException {
+		this.serverSocket = new ServerSocket(this.PORT);
 	}
 	
 	/**

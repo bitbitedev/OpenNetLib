@@ -1,7 +1,9 @@
 package dev.bitbite.networking;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 /**
@@ -20,9 +22,9 @@ import java.util.ArrayList;
  */
 public abstract class Client {
 
-	private final String HOST;
-	private final int PORT;
-	private Socket socket;
+	public final String HOST;
+	public final int PORT;
+	protected Socket socket;
 	private IOHandler ioHandler;
 	private boolean keepAlive = false;
 	private ArrayList<ClientListener> listeners;
@@ -81,7 +83,7 @@ public abstract class Client {
 	public boolean connect() {
 		try {
 			this.notifyListeners(EventType.CONNECTION);
-			this.socket = new Socket(this.HOST, this.PORT);
+			this.openSocket();
 			this.ioHandler = new IOHandler(this.socket.getInputStream(), this.socket.getOutputStream(), this::processReceivedData);
 			this.ioListeners.forEach(l -> this.ioHandler.registerListener(l));
 			if(this.socket.isConnected()) {
@@ -93,6 +95,16 @@ public abstract class Client {
 			return false;
 		}
 		return true;
+	}
+	
+	/**
+	 * Opens the Socket connection.
+	 * Moved to a different function to make it easier to replace the Socket implementation.
+	 * @throws UnknownHostException if the specified Host is unknown
+	 * @throws IOException when the process of opening the Socket fails.
+	 */
+	protected void openSocket() throws UnknownHostException, IOException {
+		this.socket = new Socket(this.HOST, this.PORT);
 	}
 	
 	/**
