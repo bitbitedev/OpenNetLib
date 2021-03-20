@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="javadoc">
-    <target name="javadoc">
-        <javadoc access="private" author="true" classpath="." destdir="doc" doctitle="BitBite Networking Library" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="dev.bitbite.networking" source="1.8" sourcepath="src" splitindex="true" use="true" version="true"/>
-    </target>
-</project>
