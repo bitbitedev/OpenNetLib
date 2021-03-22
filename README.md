@@ -1,7 +1,7 @@
 # OpenNetLib - A Java Networking Library
 
 [![Build](https://github.com/bitbitedev/OpenNetLib/actions/workflows/ant.yml/badge.svg?branch=beta)](https://github.com/bitbitedev/OpenNetLib/actions/workflows/ant.yml)
-[![Version](https://img.shields.io/github/v/release/bitbitedev/OpenNetLib?include_prereleases&style=plastic)](https://github.com/bitbitedev/OpenNetLib/releases)
+[![Version](https://img.shields.io/github/v/release/bitbitedev/OpenNetLib?include_prereleases)](https://github.com/bitbitedev/OpenNetLib/releases)
 [![Discord channel](https://img.shields.io/discord/411109318511820800?logo=discord)](https://discord.gg/MdsuFg2bPC)
 
 `OpenNetLib` is a lightweight, easy-to-use library to simplify socket communication. It is written in and for Java. It's still in an early stage but saves a lot of time already.
