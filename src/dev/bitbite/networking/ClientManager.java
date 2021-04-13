@@ -38,8 +38,9 @@ public class ClientManager extends Thread {
 	public void run() {
 		this.server.notifyListeners(Server.EventType.ACCEPT_START);
 		while(!Thread.currentThread().isInterrupted()) {
+			Socket clientSocket = null;
 			try {
-				Socket clientSocket = this.server.getServerSocket().accept();
+				clientSocket = this.server.getServerSocket().accept();
 				CommunicationHandler ch = new CommunicationHandler(clientSocket, this);
 				ch.registerListener(this.server.getIOHandlerListeners());
 				this.communicationHandler.add(ch);
@@ -50,7 +51,11 @@ public class ClientManager extends Thread {
 					this.server.notifyListeners(Server.EventType.ACCEPT_FAILED, e);
 				}
 				if(e.getMessage().contentEquals("Socket is closed")) {
-					this.server.notifyListeners(Server.EventType.SOCKET_CLOSED, e);
+					if(clientSocket != null) {
+						this.server.notifyListeners(Server.EventType.SOCKET_CLOSED, e, clientSocket.getRemoteSocketAddress());
+					} else {
+						this.server.notifyListeners(Server.EventType.SOCKET_CLOSED, e);
+					}
 					Thread.currentThread().interrupt();
 				}
 			}
