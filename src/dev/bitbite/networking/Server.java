@@ -130,7 +130,8 @@ public abstract class Server {
 	 * @param data to broadcast
 	 */
 	public void broadcast(String data) {
-		this.clientManager.getCommunicationHandler().forEach(ch -> ch.send(data));
+		final String processedData = this.getDataPreProcessor().process(TransferMode.OUT, data);
+		this.clientManager.getCommunicationHandler().forEach(ch -> ch.send(processedData));
 	}
 	
 	/**
@@ -222,10 +223,18 @@ public abstract class Server {
 			case SOCKET_CLOSED:
 				if(args.length == 0) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
-				} else if(!(args[0] instanceof Exception)) {
-					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
+				} else if(args.length == 1) {
+					if(!(args[0] instanceof Exception)) {
+						throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
+					}
+					this.listeners.forEach(l -> l.onSocketClosed((Exception)args[0]));
+				} else if(args.length >= 2) {
+					if(!(args[0] instanceof Exception) || !(args[1] instanceof String)) {
+						throw new IllegalArgumentException("Expected objects of type Exception and String, but got "+args[0].getClass().getSimpleName()+" and "+args[1].getClass().getSimpleName());
+					}
+					this.listeners.forEach(l -> l.onSocketClosed((Exception)args[0],(String)args[1]));
 				}
-				this.listeners.forEach(l -> l.onSocketClosed((Exception)args[0]));
+				
 				break;
 			case CLOSE:
 				this.listeners.forEach(l -> l.onClose());
