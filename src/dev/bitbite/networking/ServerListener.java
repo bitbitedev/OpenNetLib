@@ -88,6 +88,7 @@ public abstract class ServerListener {
 	/**
 	 * Will be fired if the ServerSocket is closed while Client tried to connect.
 	 * @param exception which is thrown during the process of client acceptance.
+	 * @param clientAddress of the closed Socket
 	 */
 	public void onSocketClosed(Exception exception, String clientAddress) {}
 }
