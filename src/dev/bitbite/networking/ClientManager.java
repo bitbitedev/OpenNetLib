@@ -47,10 +47,9 @@ public class ClientManager extends Thread {
 				ch.start();
 				this.server.notifyListeners(Server.EventType.ACCEPT, ch);
 			} catch(Exception e) {
-				if(!e.getMessage().contentEquals("Interrupted function call: accept failed")){
+				if(e.getMessage() == null || !e.getMessage().contentEquals("Interrupted function call: accept failed")){
 					this.server.notifyListeners(Server.EventType.ACCEPT_FAILED, e);
-				}
-				if(e.getMessage().contentEquals("Socket is closed")) {
+				} else if(e.getMessage().contentEquals("Socket is closed")) {
 					if(clientSocket != null) {
 						this.server.notifyListeners(Server.EventType.SOCKET_CLOSED, e, clientSocket.getRemoteSocketAddress());
 					} else {
