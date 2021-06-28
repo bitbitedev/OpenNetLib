@@ -2,6 +2,7 @@ package dev.bitbite.networking;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 import dev.bitbite.networking.DataPreProcessor.TransferMode;
@@ -34,6 +35,7 @@ public abstract class Server {
 	protected DataPreProcessor dataPreProcessor;
 	protected ArrayList<ServerListener> listeners;
 	protected ArrayList<IOHandlerListener> ioListeners;
+	private int SO_TIMEOUT = 0;
 	
 	/**
 	 * The different event-types, which occur in the server, listeners can listen on
@@ -79,6 +81,7 @@ public abstract class Server {
 		notifyListeners(EventType.START);
 		try {
 			this.openServerSocket();
+			this.serverSocket.setSoTimeout(SO_TIMEOUT);
 			this.dataPreProcessor.initLayers();
 		} catch(Exception e) {
 			this.notifyListeners(EventType.START_FAILED, e);
@@ -98,14 +101,16 @@ public abstract class Server {
 	}
 	
 	/**
-	 * Initiates the closing process of the Server with closing the {@link ClientManager} and disabling the {@link DataProcessingLayer}s
+	 * Initiates the closing process of the Server with closing the {@link ClientManager} and disabling the {@link DataProcessingLayer}s.
+	 * Finally it closes the serverSocket
 	 */
 	public void close() {
 		this.notifyListeners(EventType.CLOSE);
 		this.clientManager.close();
 		try {
 			this.dataPreProcessor.shutdown();
-		} catch (LayerDisableFailedException e) {
+			this.serverSocket.close();
+		} catch (LayerDisableFailedException | IOException e) {
 			this.notifyListeners(EventType.CLOSE_FAILED, e);
 		}
 		this.notifyListeners(EventType.CLOSE_END);
@@ -305,5 +310,14 @@ public abstract class Server {
 	 */
 	protected DataPreProcessor getDataPreProcessor() {
 		return this.dataPreProcessor;
+	}
+	
+	/**
+	 * Sets SO_TIMEOUT of the serversocket
+	 * @param timeout in milliseconds after which blocking operations should stop blocking
+	 * @throws SocketException when setting SO_TIMEOUT fails
+	 */
+	public void setSoTimeout(int timeout) throws SocketException {
+		this.SO_TIMEOUT = timeout;
 	}
 }

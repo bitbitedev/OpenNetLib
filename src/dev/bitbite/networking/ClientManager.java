@@ -1,7 +1,7 @@
 package dev.bitbite.networking;
 
-import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -38,18 +38,30 @@ public class ClientManager extends Thread {
 	public void run() {
 		this.server.notifyListeners(Server.EventType.ACCEPT_START);
 		while(!Thread.currentThread().isInterrupted()) {
+			if(this.server.getServerSocket().isClosed()) {
+				Thread.currentThread().interrupt();
+				continue;
+			}
 			Socket clientSocket = null;
 			try {
 				clientSocket = this.server.getServerSocket().accept();
+				if(clientSocket == null) continue;
 				CommunicationHandler ch = new CommunicationHandler(clientSocket, this);
 				ch.registerListener(this.server.getIOHandlerListeners());
 				this.communicationHandler.add(ch);
 				ch.start();
 				this.server.notifyListeners(Server.EventType.ACCEPT, ch);
+			} catch(SocketTimeoutException e) {
+				continue;
 			} catch(Exception e) {
+				if(e.getMessage() != null && e.getMessage().contentEquals("Socket operation on nonsocket: configureBlocking")) {
+					Thread.currentThread().interrupt();
+					continue;
+				}
 				if(e.getMessage() == null || !e.getMessage().contentEquals("Interrupted function call: accept failed")){
 					this.server.notifyListeners(Server.EventType.ACCEPT_FAILED, e);
-				} else if(e.getMessage().contentEquals("Socket is closed")) {
+				}
+				if(e.getMessage() != null && e.getMessage().contentEquals("Socket is closed")) {
 					if(clientSocket != null) {
 						this.server.notifyListeners(Server.EventType.SOCKET_CLOSED, e, clientSocket.getRemoteSocketAddress());
 					} else {
@@ -67,16 +79,8 @@ public class ClientManager extends Thread {
 	 * @return true if the closing process finishes successfully
 	 */
 	public boolean close() {
-		this.server.notifyListeners(Server.EventType.CLOSE);
 		Thread.currentThread().interrupt();
 		this.communicationHandler.forEach(ch -> ch.close());
-		try {
-			this.server.getServerSocket().close();
-		} catch(IOException e) {
-			this.server.notifyListeners(Server.EventType.CLOSE_FAILED, e);
-			return false;
-		}
-		this.server.notifyListeners(Server.EventType.CLOSE_END);
 		return true;
 	}
 	
