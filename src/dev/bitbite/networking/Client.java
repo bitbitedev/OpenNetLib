@@ -6,19 +6,23 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
+import dev.bitbite.networking.DataPreProcessor.TransferMode;
+
 /**
  * Represents an abstract implementation of the client-side connection.<br>
  * The connection process can be initiated using the client objects {@link #connect()} method, 
  * which will return true, if the connection process has been successful.<br>
  * Closing the connection can be done using the client objects {@link #close()} method,
  * which will return true, if the disconnection process has been completed successfully.<br>
- * Incoming data from the server will be forwarded to {@link #processReceivedData(String)}.<br>
+ * Incoming data from the server will be preprocessed by {@link #preprocessReceivedData(String)}
+ * and then forwarded to {@link #processReceivedData(String)}.<br>
  * Data to the server can be sent using the clients {@link IOHandler}.<br>
  * Some events trigger the notification of registered {@link ClientListener}s. 
  * 
+ * @see IOHandler
  * @see ClientListener
  * 
- * @version 0.0.1-alpha
+ * @version 0.0.2-alpha
  */
 public abstract class Client {
 
@@ -26,6 +30,7 @@ public abstract class Client {
 	public final int PORT;
 	protected Socket socket;
 	private IOHandler ioHandler;
+	private DataPreProcessor dataPreProcessor;
 	private boolean keepAlive = false;
 	private ArrayList<ClientListener> listeners;
 	private ArrayList<IOHandlerListener> ioListeners;
@@ -34,7 +39,6 @@ public abstract class Client {
 	 * The different event-types, which occur in the client, listeners can listen on
 	 * 
 	 * @see ClientListener
-	 * @version 0.0.1-alpha
 	 */
 	enum EventType {
 		CONNECTION,
@@ -56,18 +60,16 @@ public abstract class Client {
 		this.PORT = port;
 		this.listeners = new ArrayList<ClientListener>();
 		this.ioListeners = new ArrayList<IOHandlerListener>();
+		this.dataPreProcessor = new DataPreProcessor();
+		
 	}
 	
 	/**
 	 * Creates a Client object and sets the endpoint to which the client will connect on startup.
 	 * @param url the URL object that specifies the endpoint adress and port.
-	 * @version 0.0.1-alpha
 	 */
 	public Client(URL url) {
-		this.HOST = url.getHost();
-		this.PORT = url.getPort();
-		this.listeners = new ArrayList<ClientListener>();
-		this.ioListeners = new ArrayList<IOHandlerListener>();
+		this(url.getHost(), url.getPort());
 	}
 	
 	/**
@@ -77,14 +79,12 @@ public abstract class Client {
 	 * when the connection was successful, and when it wasn't.
 	 * 
 	 * @return true if the connection process as been completed successfully
-	 * 
-	 * @version 0.0.1-alpha
 	 */
 	public boolean connect() {
 		try {
 			this.notifyListeners(EventType.CONNECTION);
 			this.openSocket();
-			this.ioHandler = new IOHandler(this.socket.getInputStream(), this.socket.getOutputStream(), this::processReceivedData);
+			this.ioHandler = new IOHandler(this.socket.getInputStream(), this.socket.getOutputStream(), this::preprocessReceivedData);
 			this.ioListeners.forEach(l -> this.ioHandler.registerListener(l));
 			if(this.socket.isConnected()) {
 				this.notifyListeners(EventType.CONNECTION_SUCCESS);
@@ -116,8 +116,6 @@ public abstract class Client {
 	 * @return true if the connection has been closed successfully
 	 * 
 	 * @see IOHandler#close()
-	 * 
-	 * @version 0.0.1-alpha
 	 */
 	public boolean close() {
 		try {
@@ -137,7 +135,17 @@ public abstract class Client {
 	 * @param data to send
 	 */
 	public void send(String data) {
+		data = dataPreProcessor.process(TransferMode.OUT, data);
 		this.ioHandler.write(data);
+	}
+	
+	/**
+	 * Preprocesses incomming data by sending it to the {@link DataPreProcessor}.
+	 * The processed data is then forwarded to {@link #processReceivedData(String)};
+	 * @param data to process
+	 */
+	protected void preprocessReceivedData(String data) {
+		processReceivedData(dataPreProcessor.process(TransferMode.IN, data));
 	}
 	
 	/**
@@ -195,8 +203,6 @@ public abstract class Client {
 	 * whose types do not match the expected types of the listeners eventfunction
 	 * 
 	 * @see ClientListener
-	 * 
-	 * @version 0.0.1-alpha
 	 */
 	private void notifyListeners(EventType type, Object... args) {
 		switch(type) {
@@ -236,8 +242,6 @@ public abstract class Client {
 	/**
 	 * Indicates whether the current client object has an active connection to the server
 	 * @return true if there is an active connection to the server
-	 * 
-	 * @version 0.0.1-alpha
 	 */
 	public boolean isConnected() {
 		if(this.socket == null || this.socket.isClosed()) {
@@ -252,6 +256,14 @@ public abstract class Client {
 	 */
 	public IOHandler getIOHandler() {
 		return this.ioHandler;
+	}
+	
+	/**
+	 * Returns the DataPreProcessor associated with the client object
+	 * @return the DataPreProcessor
+	 */
+	public DataPreProcessor getDataPreProcessor() {
+		return this.dataPreProcessor;
 	}
 	
 }
