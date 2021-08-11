@@ -98,9 +98,11 @@ public class IOHandler {
 	public void close() throws IOException {
 		this.notifyListeners(EventType.CLOSE_START);
 		try {
-			this.reader.close();
+			this.writer.flush();
 			this.writer.close();
+			this.reader.close();
 		} catch(Exception e) {
+			e.printStackTrace();
 			this.notifyListeners(EventType.CLOSE_FAILED, e);
 		}
 		this.notifyListeners(EventType.CLOSE_END);
