@@ -14,7 +14,7 @@ public interface DataProcessingLayer {
 	 * @param data to process
 	 * @return processed data
 	 */
-	public String process(String data);
+	public byte[] process(byte[] data);
 	
 	/**
 	 * Gets called on {@link Server#start()} to initialize the {@link DataProcessingLayer}.

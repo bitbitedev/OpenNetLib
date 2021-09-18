@@ -5,8 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.SocketException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
@@ -14,15 +15,14 @@ import java.util.function.Consumer;
  * This IOHandler class combines an input- and an output stream object into a single class.
  * Incoming data of the inputstream will be propagated to the onRead consumer method passed
  * as an argument to the constructor.<br>
- * You can write to the outputstream via {@link #write(String)}<br>
+ * You can write to the outputstream via {@link #write(byte[])}<br>
  * <br>
  * For the process of reading incoming data from the InputStream a Thread is started and named "IO InputListener"
- * 
- * @version 0.0.2-alpha
  */
 public class IOHandler {
 
-	private PrintWriter writer;
+	private static Charset charset = StandardCharsets.UTF_8;
+	private OutputStream outputStream;
 	private BufferedReader reader;
 	private Thread inputListener;
 	private ArrayList<IOHandlerListener> listeners;
@@ -31,7 +31,6 @@ public class IOHandler {
 	 * The different event-types, which occur in the IOHandler, listeners can listen on
 	 * 
 	 * @see IOHandlerListener
-	 * @version 0.0.1-alpha
 	 */
 	enum EventType {
 		DATA_READ_START,
@@ -56,26 +55,22 @@ public class IOHandler {
 	 * @param onRead, the read Callback method which is called when a message is received
 	 * 
 	 * @throws IllegalArgumentException if at least one of the supplied arguments is null
-	 * 
-	 * @version 0.0.2-alpha
 	 */
-	public IOHandler(InputStream inputStream, OutputStream outputStream, Consumer<String> onRead) {
+	public IOHandler(InputStream inputStream, OutputStream outputStream, Consumer<byte[]> onRead) {
 		if(inputStream == null || outputStream == null || onRead == null) {
 			throw new IllegalArgumentException("Parameters of IOHandler constructor must not be null");
 		}
-		this.writer = new PrintWriter(outputStream);
+		this.outputStream = outputStream;
 		this.reader = new BufferedReader(new InputStreamReader(inputStream));
 		this.listeners = new ArrayList<IOHandlerListener>();
 		this.inputListener = new Thread(()->{
 			this.notifyListeners(EventType.DATA_READ_START);
 			while(!Thread.interrupted()) {
 				try {
-					String message = reader.readLine();
-					if(message == null) {
-						Thread.currentThread().interrupt();
-						continue;
+					if(inputStream.available() > 0) {
+						byte[] message = reader.readLine().getBytes(IOHandler.charset);
+						onRead.accept(message);
 					}
-					onRead.accept(message);
 				} catch (SocketException e) {
 					this.notifyListeners(EventType.DATA_READ_FAILED, e);
 					Thread.currentThread().interrupt();
@@ -93,13 +88,12 @@ public class IOHandler {
 	/**
 	 * Closes the streams
 	 * @throws IOException if any closing fails
-	 * @version 0.0.2-alpha
 	 */
 	public void close() throws IOException {
 		this.notifyListeners(EventType.CLOSE_START);
 		try {
-			this.writer.flush();
-			this.writer.close();
+			this.outputStream.flush();
+			this.outputStream.close();
 			this.reader.close();
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -111,14 +105,14 @@ public class IOHandler {
 	/**
 	 * Writes data to the OutputStream and flushes it.
 	 * @param data to be send
-	 * @version 0.0.1-alpha
 	 * @see java.io.PrintWriter
 	 */
-	public void write(String data) {
+	public void write(byte[] data) {
 		this.notifyListeners(EventType.WRITE, data);
 		try {
-			this.writer.write(data+"\n");
-			this.writer.flush();
+			this.outputStream.write(data);
+			this.outputStream.write('\n');
+			this.outputStream.flush();
 		} catch(Exception e) {
 			this.notifyListeners(EventType.WRITE_FAILED, e);
 		}
@@ -154,8 +148,6 @@ public class IOHandler {
 	 * whose types do not match the expected types of the listeners eventfunction
 	 * 
 	 * @see IOHandlerListener
-	 * 
-	 * @version 0.0.1-alpha
 	 */
 	private void notifyListeners(EventType type, Object... args) {
 		switch(type) {
@@ -189,11 +181,11 @@ public class IOHandler {
 				break;
 			case WRITE:
 				if(args.length == 0) {
-					throw new IllegalArgumentException("Expected object of type String, but got nothing");
-				} else if(!(args[0] instanceof String)) {
-					throw new IllegalArgumentException("Expected object of type String, but got "+args[0].getClass().getSimpleName());
+					throw new IllegalArgumentException("Expected object of type byte[], but got nothing");
+				} else if(!(args[0] instanceof byte[])) {
+					throw new IllegalArgumentException("Expected object of type byte[], but got "+args[0].getClass().getSimpleName());
 				}
-				listeners.forEach(l -> l.onWrite((String)args[0]));
+				listeners.forEach(l -> l.onWrite((byte[])args[0]));
 				break;
 			case WRITE_END:
 				listeners.forEach(l -> l.onWriteEnd());
@@ -207,6 +199,21 @@ public class IOHandler {
 				listeners.forEach(l -> l.onWriteFailed((Exception)args[0]));
 				break;
 		}
+	}
+
+	/**
+	 * @return charset incoming data is expected to be encoded in
+	 */
+	public static Charset getCharset() {
+		return charset;
+	}
+
+	/**
+	 * Sets the charset incoming data is expected to be encoded in
+	 * @param charset incoming data is expected to be encoded in
+	 */
+	public static void setCharset(Charset charset) {
+		IOHandler.charset = charset;
 	}
 	
 }

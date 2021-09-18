@@ -56,7 +56,7 @@ public class CommunicationHandler extends Thread {
 	 * Sends data to the client
 	 * @param data to send
 	 */
-	protected void send(String data) {
+	protected void send(byte[] data) {
 		this.ioHandler.write(data);
 	}
 	
@@ -67,7 +67,7 @@ public class CommunicationHandler extends Thread {
 	 * 
 	 * @param data received from the client
 	 */
-	protected void processReceivedData(String data) {
+	protected void processReceivedData(byte[] data) {
 		data = this.clientManager.getServer().getDataPreProcessor().process(DataPreProcessor.TransferMode.IN, data);
 		this.clientManager.getServer().processReceivedData(this.getIP(), data);
 	}

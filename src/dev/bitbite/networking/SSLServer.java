@@ -18,6 +18,6 @@ public abstract class SSLServer extends Server {
 	}
 	
 	@Override
-	protected abstract void processReceivedData(String clientAddress, String data);
+	protected abstract void processReceivedData(String clientAddress, byte[] data);
 
 }

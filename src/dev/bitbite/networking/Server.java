@@ -122,9 +122,9 @@ public abstract class Server {
 	 * @param clientAddress of the client the data came from
 	 * @param data sent by the server
 	 */
-	protected abstract void processReceivedData(String clientAddress, String data);
+	protected abstract void processReceivedData(String clientAddress, byte[] data);
 
-	public boolean send(String clientAddress, String data) {
+	public boolean send(String clientAddress, byte[] data) {
 		data = this.getDataPreProcessor().process(TransferMode.OUT, data);
 		this.clientManager.getCommunicationHandlerByIP(clientAddress).send(data);
 		return true;
@@ -134,8 +134,8 @@ public abstract class Server {
 	 * Sends the data to all connected clients.
 	 * @param data to broadcast
 	 */
-	public void broadcast(String data) {
-		final String processedData = this.getDataPreProcessor().process(TransferMode.OUT, data);
+	public void broadcast(byte[] data) {
+		byte[] processedData = this.getDataPreProcessor().process(TransferMode.OUT, data);
 		this.clientManager.getCommunicationHandler().forEach(ch -> ch.send(processedData));
 	}
 	

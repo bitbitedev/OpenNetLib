@@ -45,7 +45,7 @@ public class DataPreProcessor {
 	 * @param data to process
 	 * @return processed data
 	 */
-	protected String process(TransferMode mode, String data) {
+	protected byte[] process(TransferMode mode, byte[] data) {
 		if(mode == TransferMode.IN) {
 			for(DataProcessingLayer layer : this.incomingDataProcessingLayers) {
 				data = layer.process(data);

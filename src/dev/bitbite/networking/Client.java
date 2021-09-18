@@ -134,7 +134,7 @@ public abstract class Client {
 	 * Sends data to the Server
 	 * @param data to send
 	 */
-	public void send(String data) {
+	public void send(byte[] data) {
 		data = dataPreProcessor.process(TransferMode.OUT, data);
 		this.ioHandler.write(data);
 	}
@@ -144,7 +144,7 @@ public abstract class Client {
 	 * The processed data is then forwarded to {@link #processReceivedData(String)};
 	 * @param data to process
 	 */
-	protected void preprocessReceivedData(String data) {
+	protected void preprocessReceivedData(byte[] data) {
 		processReceivedData(dataPreProcessor.process(TransferMode.IN, data));
 	}
 	
@@ -153,7 +153,7 @@ public abstract class Client {
 	 * 
 	 * @param data sent by the server
 	 */
-	protected abstract void processReceivedData(String data);
+	protected abstract void processReceivedData(byte[] data);
 	
 	/**
 	 * Registers a ClientListener
