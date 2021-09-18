@@ -16,15 +16,17 @@ import java.util.function.Consumer;
  * Incoming data of the inputstream will be propagated to the onRead consumer method passed
  * as an argument to the constructor.<br>
  * You can write to the outputstream via {@link #write(byte[])}<br>
- * <br>
- * For the process of reading incoming data from the InputStream a Thread is started and named "IO InputListener"
+ * The process of reading data must be initiated using {@link #read()}. 
+ * This is necessary to make it possible to read data of multiple IOHandlers within a single
+ * thread without any IOHandler blocking the process.
  */
 public class IOHandler {
 
 	private static Charset charset = StandardCharsets.UTF_8;
+	private InputStream inputStream;
 	private OutputStream outputStream;
+	private Consumer<byte[]> readCallback;
 	private BufferedReader reader;
-	private Thread inputListener;
 	private ArrayList<IOHandlerListener> listeners;
 	
 	/**
@@ -48,8 +50,6 @@ public class IOHandler {
 	
 	/**
 	 * Initializes the IOHandler with the given Streams and read-Callback method.<br>
-	 * It also starts a Thread which listens for incoming data from the inputStream.
-	 * That is done so the IOHandler is non-blocking.
 	 * @param inputStream, the inputStream to read the data from
 	 * @param outputStream, the outputStream to write to
 	 * @param onRead, the read Callback method which is called when a message is received
@@ -60,29 +60,11 @@ public class IOHandler {
 		if(inputStream == null || outputStream == null || onRead == null) {
 			throw new IllegalArgumentException("Parameters of IOHandler constructor must not be null");
 		}
+		this.inputStream = inputStream;
 		this.outputStream = outputStream;
+		this.readCallback = onRead;
 		this.reader = new BufferedReader(new InputStreamReader(inputStream));
 		this.listeners = new ArrayList<IOHandlerListener>();
-		this.inputListener = new Thread(()->{
-			this.notifyListeners(EventType.DATA_READ_START);
-			while(!Thread.interrupted()) {
-				try {
-					if(inputStream.available() > 0) {
-						byte[] message = reader.readLine().getBytes(IOHandler.charset);
-						onRead.accept(message);
-					}
-				} catch (SocketException e) {
-					this.notifyListeners(EventType.DATA_READ_FAILED, e);
-					Thread.currentThread().interrupt();
-				} catch (Exception e) {
-					this.notifyListeners(EventType.DATA_READ_FAILED, e);
-					Thread.currentThread().interrupt();
-				}
-			}
-			this.notifyListeners(EventType.DATA_READ_END);
-		});
-		this.inputListener.setName("IO InputListener");
-		this.inputListener.start();
 	}
 	
 	/**
@@ -100,6 +82,25 @@ public class IOHandler {
 			this.notifyListeners(EventType.CLOSE_FAILED, e);
 		}
 		this.notifyListeners(EventType.CLOSE_END);
+	}
+	
+	/**
+	 * Reads data from the inputstream if there is data available.
+	 * The data read is being decoded using {@link IOHandler#charset}
+	 */
+	public void read() {
+		try {
+			if(inputStream.available() > 0) {
+				byte[] message = reader.readLine().getBytes(IOHandler.charset);
+				readCallback.accept(message);
+			}
+		} catch (SocketException e) {
+			this.notifyListeners(EventType.DATA_READ_FAILED, e);
+			Thread.currentThread().interrupt();
+		} catch (Exception e) {
+			this.notifyListeners(EventType.DATA_READ_FAILED, e);
+			Thread.currentThread().interrupt();
+		}
 	}
 	
 	/**

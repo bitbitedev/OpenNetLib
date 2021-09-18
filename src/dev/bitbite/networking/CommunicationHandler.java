@@ -9,10 +9,8 @@ import dev.bitbite.networking.Server.EventType;
 /**
  * Manages the Communication with a client by handling its IO.
  * Runs in its own Thread and names it with the associated remote socket address (CommunicationHandler@[socket adress]).
- * 
- * @version 0.0.1-alpha
  */
-public class CommunicationHandler extends Thread {
+public class CommunicationHandler {
 
 	private Socket clientSocket;
 	private ClientManager clientManager;
@@ -26,7 +24,6 @@ public class CommunicationHandler extends Thread {
 	public CommunicationHandler(Socket clientSocket, ClientManager clientManager) {
 		this.clientSocket = clientSocket;
 		this.clientManager = clientManager;
-		Thread.currentThread().setName("CommunicationHandler@"+getIP());
 		try {
 			this.ioHandler = new IOHandler(clientSocket.getInputStream(), 
 										   clientSocket.getOutputStream(),
@@ -38,8 +35,6 @@ public class CommunicationHandler extends Thread {
 	
 	/**
 	 * Closes the IOStreams and the socket itself.
-	 * 
-	 * @version 0.0.1-alpha
 	 */
 	public void close() {
 		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE);
@@ -86,6 +81,14 @@ public class CommunicationHandler extends Thread {
 	 */
 	public void registerListener(ArrayList<IOHandlerListener> listener) {
 		listener.forEach(l -> this.ioHandler.registerListener(l));
+	}
+
+	/**
+	 * Returns the IOHandler associated with this communicationHandler
+	 * @return the IOHandler associated with this communicationHandler
+	 */
+	public IOHandler getIOHandler() {
+		return this.ioHandler;
 	}
 	
 	/**

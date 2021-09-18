@@ -21,8 +21,6 @@ import dev.bitbite.networking.DataPreProcessor.TransferMode;
  * 
  * @see IOHandler
  * @see ClientListener
- * 
- * @version 0.0.2-alpha
  */
 public abstract class Client {
 
@@ -31,6 +29,7 @@ public abstract class Client {
 	protected Socket socket;
 	private IOHandler ioHandler;
 	private DataPreProcessor dataPreProcessor;
+	private Thread readThread;
 	private boolean keepAlive = false;
 	private ArrayList<ClientListener> listeners;
 	private ArrayList<IOHandlerListener> ioListeners;
@@ -61,7 +60,6 @@ public abstract class Client {
 		this.listeners = new ArrayList<ClientListener>();
 		this.ioListeners = new ArrayList<IOHandlerListener>();
 		this.dataPreProcessor = new DataPreProcessor();
-		
 	}
 	
 	/**
@@ -90,6 +88,16 @@ public abstract class Client {
 				this.notifyListeners(EventType.CONNECTION_SUCCESS);
 				this.socket.setKeepAlive(this.keepAlive);
 			}
+			if(this.readThread != null) {
+				this.readThread.interrupt();
+			}
+			this.readThread = new Thread(()->{
+				while(!readThread.isInterrupted()) {
+					getIOHandler().read();
+				}
+			});
+			this.readThread.setName("Data reader");
+			this.readThread.start();
 		} catch (Exception e) {
 			this.notifyListeners(EventType.CONNECTION_FAILED, e);
 			return false;
