@@ -14,8 +14,8 @@ import dev.bitbite.networking.DataPreProcessor.TransferMode;
  * which will return true, if the connection process has been successful.<br>
  * Closing the connection can be done using the client objects {@link #close()} method,
  * which will return true, if the disconnection process has been completed successfully.<br>
- * Incoming data from the server will be preprocessed by {@link #preprocessReceivedData(String)}
- * and then forwarded to {@link #processReceivedData(String)}.<br>
+ * Incoming data from the server will be preprocessed by {@link #preprocessReceivedData(byte[])}
+ * and then forwarded to {@link #processReceivedData(byte[])}.<br>
  * Data to the server can be sent using the clients {@link IOHandler}.<br>
  * Some events trigger the notification of registered {@link ClientListener}s. 
  * 
@@ -149,7 +149,7 @@ public abstract class Client {
 	
 	/**
 	 * Preprocesses incomming data by sending it to the {@link DataPreProcessor}.
-	 * The processed data is then forwarded to {@link #processReceivedData(String)};
+	 * The processed data is then forwarded to {@link #processReceivedData(byte[])};
 	 * @param data to process
 	 */
 	protected void preprocessReceivedData(byte[] data) {

@@ -1,1 +1,1 @@
-moduleSearchIndex = [{"l":"OpenNetLib"}]
+moduleSearchIndex = [];updateSearchResults();

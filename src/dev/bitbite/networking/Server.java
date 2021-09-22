@@ -14,7 +14,7 @@ import dev.bitbite.networking.exceptions.LayerDisableFailedException;
  * for clients to be able to connect. <br>
  * Shutting down the server can be done using {@link Server#close()}<br>
  * Incoming data from any client will be processed by the DataProcessingLayers and then
- * propagated to {@link Server#processReceivedData(String, String)}
+ * propagated to {@link Server#processReceivedData(String, byte[])}
  * containing the clients address of the client the data came from.
  * In order to send data to the client you must request the proper 
  * {@link CommunicationHandler} using the servers {@link ClientManager}

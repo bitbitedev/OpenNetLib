@@ -2,7 +2,7 @@ package dev.bitbite.networking;
 
 /**
  * Represents a single data processing layer. Incoming data will be processed 
- * by {@link #process(String)} and its result will be returned.
+ * by {@link #process(byte[])} and its result will be returned.
  * 
  * @version 0.0.2-alpha
  */
