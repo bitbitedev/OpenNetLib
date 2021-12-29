@@ -66,18 +66,18 @@ public abstract class ServerListener {
 	/**
 	 * Will be called before a CommunicationHandler is tried to be closed
 	 */
-	public void onCommunicationHandlerClose() {}
+	public void onCommunicationHandlerClose(CommunicationHandler ch) {}
 	
 	/**
 	 * Will be called once a CommunicationHandler is closed
 	 */
-	public void onCommunicationHandlerCloseEnd() {}
+	public void onCommunicationHandlerCloseEnd(CommunicationHandler ch) {}
 	
 	/**
 	 * Will be called if the closing process fails
 	 * @param exception which was thrown during the process of closing the CommunicationHandler
 	 */
-	public void onCommunicationHandlerCloseFailed(Exception exception) {}
+	public void onCommunicationHandlerCloseFailed(CommunicationHandler ch,Exception exception) {}
 
 	/**
 	 * Will be fired if the ServerSocket is closed while Client tried to connect.

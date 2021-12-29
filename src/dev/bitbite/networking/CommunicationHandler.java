@@ -37,14 +37,14 @@ public class CommunicationHandler {
 	 * Closes the IOStreams and the socket itself.
 	 */
 	public void close() {
-		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE);
+		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE, this);
 		try {
 			this.ioHandler.close();
 			this.clientSocket.close();
 		} catch(Exception e) {
-			this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE_FAILED, e);
+			this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE_FAILED, this, e);
 		}
-		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE_END);
+		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE_END, this);
 	}
 	
 	/**

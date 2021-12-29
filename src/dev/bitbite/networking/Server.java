@@ -264,18 +264,28 @@ public abstract class Server {
 				this.listeners.forEach(l -> l.onCommunicationHandlerInitFailed((Exception)args[0]));
 				break;
 			case COMMUNICATIONHANDLER_CLOSE:
-				this.listeners.forEach(l -> l.onCommunicationHandlerClose());
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type CommunicationHandler, but got nothing");
+				} else if(!(args[0] instanceof CommunicationHandler)) {
+					throw new IllegalArgumentException("Expected object of type CommunicationHandler, but got "+args[0].getClass().getSimpleName());
+				}
+				this.listeners.forEach(l -> l.onCommunicationHandlerClose((CommunicationHandler)args[0]));
 				break;
 			case COMMUNICATIONHANDLER_CLOSE_END:
-				this.listeners.forEach(l -> l.onCommunicationHandlerCloseEnd());
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type CommunicationHandler, but got nothing");
+				} else if(!(args[0] instanceof CommunicationHandler)) {
+					throw new IllegalArgumentException("Expected object of type CommunicationHandler, but got "+args[0].getClass().getSimpleName());
+				}
+				this.listeners.forEach(l -> l.onCommunicationHandlerCloseEnd((CommunicationHandler)args[0]));
 				break;
 			case COMMUNICATIONHANDLER_CLOSE_FAILED:
 				if(args.length == 0) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
-				} else if(!(args[0] instanceof Exception)) {
-					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
+				} else if(!(args[0] instanceof CommunicationHandler && args[1] instanceof Exception)) {
+					throw new IllegalArgumentException("Expected objects of type CommunicationHandler and Exception, but got "+args[0].getClass().getSimpleName()+" and "+args[1].getClass().getSimpleName());
 				}
-				this.listeners.forEach(l -> l.onCommunicationHandlerCloseFailed((Exception)args[0]));
+				this.listeners.forEach(l -> l.onCommunicationHandlerCloseFailed((CommunicationHandler)args[0], (Exception)args[1]));
 				break;
 		}
 	}

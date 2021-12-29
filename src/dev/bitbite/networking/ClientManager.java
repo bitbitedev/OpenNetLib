@@ -83,6 +83,7 @@ public class ClientManager extends Thread {
 	 */
 	public boolean close() {
 		Thread.currentThread().interrupt();
+		this.readThread.interrupt();
 		this.communicationHandler.forEach(ch -> ch.close());
 		return true;
 	}
