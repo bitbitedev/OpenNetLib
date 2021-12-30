@@ -28,6 +28,7 @@ public class CommunicationHandler {
 			this.ioHandler = new IOHandler(clientSocket.getInputStream(), 
 										   clientSocket.getOutputStream(),
 										   this::processReceivedData);
+			this.ioHandler.registerListener(new CommunicationHandlerCloseListener(this));
 		} catch (IOException e) {
 			this.clientManager.getServer().notifyListeners(Server.EventType.COMMUNICATIONHANDLER_INIT_FAILED, e);
 		}

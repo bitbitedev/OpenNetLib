@@ -1,13 +1,9 @@
 package dev.bitbite.networking;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.SocketException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
@@ -22,11 +18,14 @@ import java.util.function.Consumer;
  */
 public class IOHandler {
 
-	private static Charset charset = StandardCharsets.UTF_8;
+	private static byte END_OF_MESSAGE_BYTE = 0x0A;
+	private static int MAX_READ_SIZE = 1024;
+	
+	private boolean closed = false;
 	private InputStream inputStream;
 	private OutputStream outputStream;
+	private ArrayList<Byte> readBuffer;
 	private Consumer<byte[]> readCallback;
-	private BufferedReader reader;
 	private ArrayList<IOHandlerListener> listeners;
 	
 	/**
@@ -62,8 +61,8 @@ public class IOHandler {
 		}
 		this.inputStream = inputStream;
 		this.outputStream = outputStream;
+		this.readBuffer = new ArrayList<Byte>();
 		this.readCallback = onRead;
-		this.reader = new BufferedReader(new InputStreamReader(inputStream));
 		this.listeners = new ArrayList<IOHandlerListener>();
 	}
 	
@@ -72,11 +71,14 @@ public class IOHandler {
 	 * @throws IOException if any closing fails
 	 */
 	public void close() throws IOException {
+		if(closed) {
+			return;
+		}
 		this.notifyListeners(EventType.CLOSE_START);
 		try {
 			this.outputStream.flush();
 			this.outputStream.close();
-			this.reader.close();
+			closed = true;
 		} catch(Exception e) {
 			e.printStackTrace();
 			this.notifyListeners(EventType.CLOSE_FAILED, e);
@@ -91,8 +93,7 @@ public class IOHandler {
 	public void read() {
 		try {
 			if(inputStream.available() > 0) {
-				byte[] message = reader.readLine().getBytes(IOHandler.charset);
-				readCallback.accept(message);
+				readNBytes(MAX_READ_SIZE);
 			}
 		} catch (SocketException e) {
 			this.notifyListeners(EventType.DATA_READ_FAILED, e);
@@ -100,6 +101,28 @@ public class IOHandler {
 		} catch (Exception e) {
 			this.notifyListeners(EventType.DATA_READ_FAILED, e);
 			Thread.currentThread().interrupt();
+		}
+	}
+	
+	private void readNBytes(int amount) throws IOException {
+		for(int i = 0; i < amount; i++) {
+			int iRead = inputStream.read();
+			if(iRead == -1) {
+				close();
+				return;
+			}
+			byte read = ((Integer)iRead).byteValue();
+			if(read != IOHandler.END_OF_MESSAGE_BYTE) {
+				readBuffer.add(read);
+			} else {
+				byte[] result = new byte[readBuffer.size()];
+				for(int j = 0; j < readBuffer.size(); j++) {
+				    result[j] = readBuffer.get(j).byteValue();
+				}
+				readBuffer.clear();
+				readCallback.accept(result);
+				break;
+			}
 		}
 	}
 	
@@ -201,20 +224,49 @@ public class IOHandler {
 				break;
 		}
 	}
-
+	
 	/**
-	 * @return charset incoming data is expected to be encoded in
+	 * Returns if this IOHandler is closed
+	 * @return if this IOHandler is closed
 	 */
-	public static Charset getCharset() {
-		return charset;
-	}
-
-	/**
-	 * Sets the charset incoming data is expected to be encoded in
-	 * @param charset incoming data is expected to be encoded in
-	 */
-	public static void setCharset(Charset charset) {
-		IOHandler.charset = charset;
+	public boolean isClosed() {
+		return this.closed;
 	}
 	
+	/**
+	 * Returns the byte that is currently set to mark the end of a message.
+	 * Its default value is set to 0x0A, which is the LINE FEED byte.
+	 * @return the byte that is currently set to mark the end of a message
+	 */
+	public static byte getEndOfMessageByte() {
+		return IOHandler.END_OF_MESSAGE_BYTE;
+	}
+	
+	/**
+	 * Sets the byte that marks the end of a message.
+	 * Its default value is set to 0x0A, which is the LINE FEED byte.
+	 * @param endOfMessageByte the byte that should represent the end of a message
+	 */
+	public static void setEndOfMessageByte(byte endOfMessageByte) {
+		IOHandler.END_OF_MESSAGE_BYTE = endOfMessageByte;
+	}
+	
+	/**
+	 * Returns the maximum count of bytes that are being read at one time.
+	 * This is done so that a long message does not block other connections from reading for too long. 
+	 * @return the maximum count of bytes that are being read at one time.
+	 */
+	public static int getMaxReadSize() {
+		return IOHandler.MAX_READ_SIZE;
+	}
+	
+	/**
+	 * Sets the maximum count of bytes that are being read at one time.
+	 * This is done so that a long message does not block other connections from reading for too long.
+	 * Higher values may result in longer answer times.
+	 * @param endOfMessageByte the maximum count of bytes that are being read at one time.
+	 */
+	public static void setMaxReadSize(int maxReadSize) {
+		IOHandler.MAX_READ_SIZE = maxReadSize;
+	}
 }
