@@ -8,20 +8,20 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * This Thread attempts to detect disconnected clients.
- * Every second it checks if since the last read of each client
+ * This Thread attempts to detect if the server has closed the connection.
+ * Every second it checks if since the last read of the server
  * at least {@link #MAX_READ_THRESHOLD} nanoseconds have passed.
  * If so it tries to read 1 byte from its InputChannel which will trigger
- * a disconnection process if the client has disconnected.
+ * a disconnection process if the had closed the connection.
  */
-public class DisconnectedClientDetector extends Thread {
+public class DisconnectedServerDetector extends Thread {
 
 	private long MAX_READ_THRESHOLD = 5_000_000_000L;
-	private Server server;
+	private Client client;
 	private ExecutorService executorService;
 	
-	public DisconnectedClientDetector(Server server) {
-		this.server = server;
+	public DisconnectedServerDetector(Client client) {
+		this.client = client;
 		this.executorService = Executors.newSingleThreadExecutor((r) -> {
             Thread t = Executors.defaultThreadFactory().newThread(r);
             t.setDaemon(true);
@@ -32,18 +32,20 @@ public class DisconnectedClientDetector extends Thread {
 	@Override
 	public void run() {
 		while(!Thread.interrupted()) {
-			for(var ch : server.getClientManager().getCommunicationHandler()) {
-				if(ch.getIOHandler().getTimeSinceLastRead() > MAX_READ_THRESHOLD) {
-					Future<Boolean> future = executorService.submit(() -> {
-						Thread.currentThread().setName("[DDC] client checker");
-						ch.getIOHandler().readNBytes(1);
-						return true;
-					});
-					try {
-						future.get(20, TimeUnit.MILLISECONDS);
-					} catch (InterruptedException | ExecutionException | TimeoutException e) {
-						future.cancel(true);
-					}
+			if(client.isClosed()) {
+				Thread.currentThread().interrupt();
+				continue;
+			}
+			if(client.getIOHandler().getTimeSinceLastRead() > MAX_READ_THRESHOLD) {
+				Future<Boolean> future = executorService.submit(() -> {
+					Thread.currentThread().setName("[DDS] server checker");
+					client.getIOHandler().readNBytes(1);
+					return true;
+				});
+				try {
+					future.get(20, TimeUnit.MILLISECONDS);
+				} catch (InterruptedException | ExecutionException | TimeoutException e) {
+					future.cancel(true);
 				}
 			}
 			try {

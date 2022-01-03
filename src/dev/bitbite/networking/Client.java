@@ -24,11 +24,13 @@ import dev.bitbite.networking.DataPreProcessor.TransferMode;
  */
 public abstract class Client {
 
+	private boolean closed;
 	public final String HOST;
 	public final int PORT;
 	protected Socket socket;
 	private IOHandler ioHandler;
 	private DataPreProcessor dataPreProcessor;
+	protected DisconnectedServerDetector disconnectedServerDetector;
 	private Thread readThread;
 	private boolean keepAlive = false;
 	private ArrayList<ClientListener> listeners;
@@ -60,6 +62,9 @@ public abstract class Client {
 		this.listeners = new ArrayList<ClientListener>();
 		this.ioListeners = new ArrayList<IOHandlerListener>();
 		this.dataPreProcessor = new DataPreProcessor();
+		this.ioListeners.add(new ClientCloseListener(this));
+		this.disconnectedServerDetector = new DisconnectedServerDetector(this);
+		this.disconnectedServerDetector.setName("Disconnected Server Detector");
 	}
 	
 	/**
@@ -92,12 +97,14 @@ public abstract class Client {
 				this.readThread.interrupt();
 			}
 			this.readThread = new Thread(()->{
-				while(!readThread.isInterrupted()) {
-					getIOHandler().read();
+				while(!Thread.interrupted()) {
+					this.getIOHandler().read();
 				}
+				Thread.currentThread().interrupt();
 			});
 			this.readThread.setName("Data reader");
 			this.readThread.start();
+			this.disconnectedServerDetector.start();
 		} catch (Exception e) {
 			this.notifyListeners(EventType.CONNECTION_FAILED, e);
 			return false;
@@ -128,13 +135,16 @@ public abstract class Client {
 	public boolean close() {
 		try {
 			this.notifyListeners(EventType.CLOSE);
+			this.readThread.interrupt();
 			this.ioHandler.close();
 			this.socket.close();
+			this.disconnectedServerDetector.interrupt();
 		} catch(Exception e) {
 			this.notifyListeners(EventType.CLOSE_FAILED, e);
 			return false;
 		}
 		this.notifyListeners(EventType.CLOSE_SUCCESS);
+		closed = true;
 		return true;
 	}
 	
@@ -177,6 +187,9 @@ public abstract class Client {
 	 */
 	public void registerListener(IOHandlerListener listener) {
 		this.ioListeners.add(listener);
+		if(this.ioHandler != null) {
+			this.ioHandler.registerListener(listener);
+		}
 	}
 	
 	/**
@@ -258,6 +271,14 @@ public abstract class Client {
 		return this.socket.isConnected();
 	}
 	
+	public boolean isClosed() {
+		return closed;
+	}
+
+	public void setClosed(boolean closed) {
+		this.closed = closed;
+	}
+
 	/**
 	 * Returns the IOHandler associated with the client object
 	 * @return the IOHandler
