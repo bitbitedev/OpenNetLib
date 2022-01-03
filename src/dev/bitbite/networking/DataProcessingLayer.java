@@ -2,7 +2,7 @@ package dev.bitbite.networking;
 
 /**
  * Represents a single data processing layer. Incoming data will be processed 
- * by {@link #process(String)} and its result will be returned.
+ * by {@link #process(byte[])} and its result will be returned.
  * 
  * @version 0.0.2-alpha
  */
@@ -14,7 +14,7 @@ public interface DataProcessingLayer {
 	 * @param data to process
 	 * @return processed data
 	 */
-	public String process(String data);
+	public byte[] process(byte[] data);
 	
 	/**
 	 * Gets called on {@link Server#start()} to initialize the {@link DataProcessingLayer}.

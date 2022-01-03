@@ -8,11 +8,8 @@ import dev.bitbite.networking.Server.EventType;
 
 /**
  * Manages the Communication with a client by handling its IO.
- * Runs in its own Thread and names it with the associated remote socket address (CommunicationHandler@[socket adress]).
- * 
- * @version 0.0.1-alpha
  */
-public class CommunicationHandler extends Thread {
+public class CommunicationHandler {
 
 	private Socket clientSocket;
 	private ClientManager clientManager;
@@ -26,11 +23,11 @@ public class CommunicationHandler extends Thread {
 	public CommunicationHandler(Socket clientSocket, ClientManager clientManager) {
 		this.clientSocket = clientSocket;
 		this.clientManager = clientManager;
-		Thread.currentThread().setName("CommunicationHandler@"+getIP());
 		try {
 			this.ioHandler = new IOHandler(clientSocket.getInputStream(), 
 										   clientSocket.getOutputStream(),
 										   this::processReceivedData);
+			this.ioHandler.registerListener(new CommunicationHandlerCloseListener(this));
 		} catch (IOException e) {
 			this.clientManager.getServer().notifyListeners(Server.EventType.COMMUNICATIONHANDLER_INIT_FAILED, e);
 		}
@@ -38,25 +35,24 @@ public class CommunicationHandler extends Thread {
 	
 	/**
 	 * Closes the IOStreams and the socket itself.
-	 * 
-	 * @version 0.0.1-alpha
 	 */
 	public void close() {
-		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE);
+		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE, this);
 		try {
 			this.ioHandler.close();
 			this.clientSocket.close();
+			this.clientManager.removeCommunicationHandler(this);
 		} catch(Exception e) {
-			this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE_FAILED, e);
+			this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE_FAILED, this, e);
 		}
-		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE_END);
+		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE_END, this);
 	}
 	
 	/**
 	 * Sends data to the client
 	 * @param data to send
 	 */
-	protected void send(String data) {
+	protected void send(byte[] data) {
 		this.ioHandler.write(data);
 	}
 	
@@ -67,7 +63,7 @@ public class CommunicationHandler extends Thread {
 	 * 
 	 * @param data received from the client
 	 */
-	protected void processReceivedData(String data) {
+	protected void processReceivedData(byte[] data) {
 		data = this.clientManager.getServer().getDataPreProcessor().process(DataPreProcessor.TransferMode.IN, data);
 		this.clientManager.getServer().processReceivedData(this.getIP(), data);
 	}
@@ -86,6 +82,14 @@ public class CommunicationHandler extends Thread {
 	 */
 	public void registerListener(ArrayList<IOHandlerListener> listener) {
 		listener.forEach(l -> this.ioHandler.registerListener(l));
+	}
+
+	/**
+	 * Returns the IOHandler associated with this communicationHandler
+	 * @return the IOHandler associated with this communicationHandler
+	 */
+	public IOHandler getIOHandler() {
+		return this.ioHandler;
 	}
 	
 	/**

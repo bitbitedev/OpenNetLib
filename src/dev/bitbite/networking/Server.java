@@ -14,7 +14,7 @@ import dev.bitbite.networking.exceptions.LayerDisableFailedException;
  * for clients to be able to connect. <br>
  * Shutting down the server can be done using {@link Server#close()}<br>
  * Incoming data from any client will be processed by the DataProcessingLayers and then
- * propagated to {@link Server#processReceivedData(String, String)}
+ * propagated to {@link Server#processReceivedData(String, byte[])}
  * containing the clients address of the client the data came from.
  * In order to send data to the client you must request the proper 
  * {@link CommunicationHandler} using the servers {@link ClientManager}
@@ -33,6 +33,7 @@ public abstract class Server {
 	protected ServerSocket serverSocket;
 	protected ClientManager clientManager;
 	protected DataPreProcessor dataPreProcessor;
+	protected DisconnectedClientDetector disconnectedClientDetector;
 	protected ArrayList<ServerListener> listeners;
 	protected ArrayList<IOHandlerListener> ioListeners;
 	private int SO_TIMEOUT = 0;
@@ -70,6 +71,8 @@ public abstract class Server {
 		this.clientManager = new ClientManager(this);
 		this.clientManager.setName("ClientManager");
 		this.dataPreProcessor = new DataPreProcessor();
+		this.disconnectedClientDetector = new DisconnectedClientDetector(this);
+		this.disconnectedClientDetector.setName("Disconnected Client Detector");
 		this.listeners = new ArrayList<ServerListener>();
 		this.ioListeners = new ArrayList<IOHandlerListener>();
 	}
@@ -82,6 +85,7 @@ public abstract class Server {
 		try {
 			this.openServerSocket();
 			this.serverSocket.setSoTimeout(SO_TIMEOUT);
+			this.disconnectedClientDetector.start();
 			this.dataPreProcessor.initLayers();
 		} catch(Exception e) {
 			this.notifyListeners(EventType.START_FAILED, e);
@@ -110,6 +114,7 @@ public abstract class Server {
 		try {
 			this.dataPreProcessor.shutdown();
 			this.serverSocket.close();
+			this.disconnectedClientDetector.interrupt();
 		} catch (LayerDisableFailedException | IOException e) {
 			this.notifyListeners(EventType.CLOSE_FAILED, e);
 		}
@@ -122,9 +127,9 @@ public abstract class Server {
 	 * @param clientAddress of the client the data came from
 	 * @param data sent by the server
 	 */
-	protected abstract void processReceivedData(String clientAddress, String data);
+	protected abstract void processReceivedData(String clientAddress, byte[] data);
 
-	public boolean send(String clientAddress, String data) {
+	public boolean send(String clientAddress, byte[] data) {
 		data = this.getDataPreProcessor().process(TransferMode.OUT, data);
 		this.clientManager.getCommunicationHandlerByIP(clientAddress).send(data);
 		return true;
@@ -134,8 +139,8 @@ public abstract class Server {
 	 * Sends the data to all connected clients.
 	 * @param data to broadcast
 	 */
-	public void broadcast(String data) {
-		final String processedData = this.getDataPreProcessor().process(TransferMode.OUT, data);
+	public void broadcast(byte[] data) {
+		byte[] processedData = this.getDataPreProcessor().process(TransferMode.OUT, data);
 		this.clientManager.getCommunicationHandler().forEach(ch -> ch.send(processedData));
 	}
 	
@@ -264,18 +269,28 @@ public abstract class Server {
 				this.listeners.forEach(l -> l.onCommunicationHandlerInitFailed((Exception)args[0]));
 				break;
 			case COMMUNICATIONHANDLER_CLOSE:
-				this.listeners.forEach(l -> l.onCommunicationHandlerClose());
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type CommunicationHandler, but got nothing");
+				} else if(!(args[0] instanceof CommunicationHandler)) {
+					throw new IllegalArgumentException("Expected object of type CommunicationHandler, but got "+args[0].getClass().getSimpleName());
+				}
+				this.listeners.forEach(l -> l.onCommunicationHandlerClose((CommunicationHandler)args[0]));
 				break;
 			case COMMUNICATIONHANDLER_CLOSE_END:
-				this.listeners.forEach(l -> l.onCommunicationHandlerCloseEnd());
+				if(args.length == 0) {
+					throw new IllegalArgumentException("Expected object of type CommunicationHandler, but got nothing");
+				} else if(!(args[0] instanceof CommunicationHandler)) {
+					throw new IllegalArgumentException("Expected object of type CommunicationHandler, but got "+args[0].getClass().getSimpleName());
+				}
+				this.listeners.forEach(l -> l.onCommunicationHandlerCloseEnd((CommunicationHandler)args[0]));
 				break;
 			case COMMUNICATIONHANDLER_CLOSE_FAILED:
 				if(args.length == 0) {
 					throw new IllegalArgumentException("Expected object of type Exception, but got nothing");
-				} else if(!(args[0] instanceof Exception)) {
-					throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
+				} else if(!(args[0] instanceof CommunicationHandler && args[1] instanceof Exception)) {
+					throw new IllegalArgumentException("Expected objects of type CommunicationHandler and Exception, but got "+args[0].getClass().getSimpleName()+" and "+args[1].getClass().getSimpleName());
 				}
-				this.listeners.forEach(l -> l.onCommunicationHandlerCloseFailed((Exception)args[0]));
+				this.listeners.forEach(l -> l.onCommunicationHandlerCloseFailed((CommunicationHandler)args[0], (Exception)args[1]));
 				break;
 		}
 	}
@@ -288,6 +303,14 @@ public abstract class Server {
 		return this.serverSocket;
 	}
 	
+	/**
+	 * Returns the current ClientManager
+	 * @return the current ClientManager
+	 */
+	public ClientManager getClientManager() {
+		return clientManager;
+	}
+
 	/**
 	 * Returns a list of all ServerListeners registered at the server
 	 * @return the list of ServerListeners

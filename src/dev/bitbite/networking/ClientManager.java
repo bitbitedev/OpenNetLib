@@ -9,12 +9,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * starts a {@link CommunicationHandler} in a separate thread for each connecting client.<br>
  * 
  * @see CommunicationHandler
- * 
- * @version 0.0.1-alpha
  */
 public class ClientManager extends Thread {
 
+	private boolean closing = false;
 	private final Server server;
+	private Thread readThread;
 	private CopyOnWriteArrayList<CommunicationHandler> communicationHandler;
 	
 	/**
@@ -31,12 +31,17 @@ public class ClientManager extends Thread {
 	 * a {@link CommunicationHandler} is started in a separate Thread.
 	 * 
 	 * @see CommunicationHandler
-	 * 
-	 * @version 0.0.1-alpha
 	 */
 	@Override
 	public void run() {
 		this.server.notifyListeners(Server.EventType.ACCEPT_START);
+		this.readThread = new Thread(()->{
+			while(!readThread.isInterrupted()) {
+				this.communicationHandler.forEach(ch -> ch.getIOHandler().read());
+			}
+		});
+		readThread.setName("Data reader");
+		readThread.start();
 		while(!Thread.currentThread().isInterrupted()) {
 			if(this.server.getServerSocket().isClosed()) {
 				Thread.currentThread().interrupt();
@@ -49,7 +54,6 @@ public class ClientManager extends Thread {
 				CommunicationHandler ch = new CommunicationHandler(clientSocket, this);
 				ch.registerListener(this.server.getIOHandlerListeners());
 				this.communicationHandler.add(ch);
-				ch.start();
 				this.server.notifyListeners(Server.EventType.ACCEPT, ch);
 			} catch(SocketTimeoutException e) {
 				continue;
@@ -59,6 +63,9 @@ public class ClientManager extends Thread {
 					continue;
 				}
 				if(e.getMessage() == null || !e.getMessage().contentEquals("Interrupted function call: accept failed")){
+					if(closing) {
+						continue;
+					}
 					this.server.notifyListeners(Server.EventType.ACCEPT_FAILED, e);
 				}
 				if(e.getMessage() != null && e.getMessage().contentEquals("Socket is closed")) {
@@ -79,7 +86,9 @@ public class ClientManager extends Thread {
 	 * @return true if the closing process finishes successfully
 	 */
 	public boolean close() {
+		closing = true;
 		Thread.currentThread().interrupt();
+		this.readThread.interrupt();
 		this.communicationHandler.forEach(ch -> ch.close());
 		return true;
 	}
@@ -115,5 +124,13 @@ public class ClientManager extends Thread {
 	 */
 	protected CopyOnWriteArrayList<CommunicationHandler> getCommunicationHandler() {
 		return this.communicationHandler;
+	}
+	
+	/**
+	 * Removes the given communicationHandler from the list
+	 * @param communicationHandler to remove
+	 */
+	protected void removeCommunicationHandler(CommunicationHandler communicationHandler) {
+		this.communicationHandler.remove(communicationHandler);
 	}
 }

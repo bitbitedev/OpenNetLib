@@ -17,6 +17,6 @@ public abstract class SSLClient extends Client {
 	}
 	
 	@Override
-	protected abstract void processReceivedData(String data);
+	protected abstract void processReceivedData(byte[] data);
 
 }

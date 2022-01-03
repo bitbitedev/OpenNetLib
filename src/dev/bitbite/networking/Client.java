@@ -14,15 +14,13 @@ import dev.bitbite.networking.DataPreProcessor.TransferMode;
  * which will return true, if the connection process has been successful.<br>
  * Closing the connection can be done using the client objects {@link #close()} method,
  * which will return true, if the disconnection process has been completed successfully.<br>
- * Incoming data from the server will be preprocessed by {@link #preprocessReceivedData(String)}
- * and then forwarded to {@link #processReceivedData(String)}.<br>
+ * Incoming data from the server will be preprocessed by {@link #preprocessReceivedData(byte[])}
+ * and then forwarded to {@link #processReceivedData(byte[])}.<br>
  * Data to the server can be sent using the clients {@link IOHandler}.<br>
  * Some events trigger the notification of registered {@link ClientListener}s. 
  * 
  * @see IOHandler
  * @see ClientListener
- * 
- * @version 0.0.2-alpha
  */
 public abstract class Client {
 
@@ -31,6 +29,7 @@ public abstract class Client {
 	protected Socket socket;
 	private IOHandler ioHandler;
 	private DataPreProcessor dataPreProcessor;
+	private Thread readThread;
 	private boolean keepAlive = false;
 	private ArrayList<ClientListener> listeners;
 	private ArrayList<IOHandlerListener> ioListeners;
@@ -61,7 +60,6 @@ public abstract class Client {
 		this.listeners = new ArrayList<ClientListener>();
 		this.ioListeners = new ArrayList<IOHandlerListener>();
 		this.dataPreProcessor = new DataPreProcessor();
-		
 	}
 	
 	/**
@@ -90,6 +88,16 @@ public abstract class Client {
 				this.notifyListeners(EventType.CONNECTION_SUCCESS);
 				this.socket.setKeepAlive(this.keepAlive);
 			}
+			if(this.readThread != null) {
+				this.readThread.interrupt();
+			}
+			this.readThread = new Thread(()->{
+				while(!readThread.isInterrupted()) {
+					getIOHandler().read();
+				}
+			});
+			this.readThread.setName("Data reader");
+			this.readThread.start();
 		} catch (Exception e) {
 			this.notifyListeners(EventType.CONNECTION_FAILED, e);
 			return false;
@@ -134,17 +142,17 @@ public abstract class Client {
 	 * Sends data to the Server
 	 * @param data to send
 	 */
-	public void send(String data) {
+	public void send(byte[] data) {
 		data = dataPreProcessor.process(TransferMode.OUT, data);
 		this.ioHandler.write(data);
 	}
 	
 	/**
 	 * Preprocesses incomming data by sending it to the {@link DataPreProcessor}.
-	 * The processed data is then forwarded to {@link #processReceivedData(String)};
+	 * The processed data is then forwarded to {@link #processReceivedData(byte[])};
 	 * @param data to process
 	 */
-	protected void preprocessReceivedData(String data) {
+	protected void preprocessReceivedData(byte[] data) {
 		processReceivedData(dataPreProcessor.process(TransferMode.IN, data));
 	}
 	
@@ -153,7 +161,7 @@ public abstract class Client {
 	 * 
 	 * @param data sent by the server
 	 */
-	protected abstract void processReceivedData(String data);
+	protected abstract void processReceivedData(byte[] data);
 	
 	/**
 	 * Registers a ClientListener

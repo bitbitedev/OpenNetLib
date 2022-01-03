@@ -45,9 +45,9 @@ public abstract class IOHandlerListener {
 
 	/**
 	 * Will be called before data is sent over the outputStream
-	 * @param data which will be sent
+	 * @param args which will be sent
 	 */
-	public void onWrite(String data) {}
+	public void onWrite(byte[] args) {}
 
 	/**
 	 * Will be called after the writing to the outputStream has been finished
