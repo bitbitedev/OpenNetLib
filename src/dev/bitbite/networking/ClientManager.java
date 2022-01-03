@@ -12,6 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class ClientManager extends Thread {
 
+	private boolean closing = false;
 	private final Server server;
 	private Thread readThread;
 	private CopyOnWriteArrayList<CommunicationHandler> communicationHandler;
@@ -62,6 +63,9 @@ public class ClientManager extends Thread {
 					continue;
 				}
 				if(e.getMessage() == null || !e.getMessage().contentEquals("Interrupted function call: accept failed")){
+					if(closing) {
+						continue;
+					}
 					this.server.notifyListeners(Server.EventType.ACCEPT_FAILED, e);
 				}
 				if(e.getMessage() != null && e.getMessage().contentEquals("Socket is closed")) {
@@ -82,6 +86,7 @@ public class ClientManager extends Thread {
 	 * @return true if the closing process finishes successfully
 	 */
 	public boolean close() {
+		closing = true;
 		Thread.currentThread().interrupt();
 		this.readThread.interrupt();
 		this.communicationHandler.forEach(ch -> ch.close());
@@ -119,5 +124,13 @@ public class ClientManager extends Thread {
 	 */
 	protected CopyOnWriteArrayList<CommunicationHandler> getCommunicationHandler() {
 		return this.communicationHandler;
+	}
+	
+	/**
+	 * Removes the given communicationHandler from the list
+	 * @param communicationHandler to remove
+	 */
+	protected void removeCommunicationHandler(CommunicationHandler communicationHandler) {
+		this.communicationHandler.remove(communicationHandler);
 	}
 }

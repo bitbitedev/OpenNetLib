@@ -8,7 +8,6 @@ import dev.bitbite.networking.Server.EventType;
 
 /**
  * Manages the Communication with a client by handling its IO.
- * Runs in its own Thread and names it with the associated remote socket address (CommunicationHandler@[socket adress]).
  */
 public class CommunicationHandler {
 
@@ -42,6 +41,7 @@ public class CommunicationHandler {
 		try {
 			this.ioHandler.close();
 			this.clientSocket.close();
+			this.clientManager.removeCommunicationHandler(this);
 		} catch(Exception e) {
 			this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE_FAILED, this, e);
 		}

@@ -33,6 +33,7 @@ public abstract class Server {
 	protected ServerSocket serverSocket;
 	protected ClientManager clientManager;
 	protected DataPreProcessor dataPreProcessor;
+	protected DisconnectedClientDetector disconnectedClientDetector;
 	protected ArrayList<ServerListener> listeners;
 	protected ArrayList<IOHandlerListener> ioListeners;
 	private int SO_TIMEOUT = 0;
@@ -70,6 +71,8 @@ public abstract class Server {
 		this.clientManager = new ClientManager(this);
 		this.clientManager.setName("ClientManager");
 		this.dataPreProcessor = new DataPreProcessor();
+		this.disconnectedClientDetector = new DisconnectedClientDetector(this);
+		this.disconnectedClientDetector.setName("Disconnected Client Detector");
 		this.listeners = new ArrayList<ServerListener>();
 		this.ioListeners = new ArrayList<IOHandlerListener>();
 	}
@@ -82,6 +85,7 @@ public abstract class Server {
 		try {
 			this.openServerSocket();
 			this.serverSocket.setSoTimeout(SO_TIMEOUT);
+			this.disconnectedClientDetector.start();
 			this.dataPreProcessor.initLayers();
 		} catch(Exception e) {
 			this.notifyListeners(EventType.START_FAILED, e);
@@ -110,6 +114,7 @@ public abstract class Server {
 		try {
 			this.dataPreProcessor.shutdown();
 			this.serverSocket.close();
+			this.disconnectedClientDetector.interrupt();
 		} catch (LayerDisableFailedException | IOException e) {
 			this.notifyListeners(EventType.CLOSE_FAILED, e);
 		}
@@ -298,6 +303,14 @@ public abstract class Server {
 		return this.serverSocket;
 	}
 	
+	/**
+	 * Returns the current ClientManager
+	 * @return the current ClientManager
+	 */
+	public ClientManager getClientManager() {
+		return clientManager;
+	}
+
 	/**
 	 * Returns a list of all ServerListeners registered at the server
 	 * @return the list of ServerListeners

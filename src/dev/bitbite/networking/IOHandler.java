@@ -21,12 +21,14 @@ public class IOHandler {
 	private static byte END_OF_MESSAGE_BYTE = 0x0A;
 	private static int MAX_READ_SIZE = 1024;
 	
+	private boolean closing = false;
 	private boolean closed = false;
 	private InputStream inputStream;
 	private OutputStream outputStream;
 	private ArrayList<Byte> readBuffer;
 	private Consumer<byte[]> readCallback;
 	private ArrayList<IOHandlerListener> listeners;
+	private long lastRead;
 	
 	/**
 	 * The different event-types, which occur in the IOHandler, listeners can listen on
@@ -64,23 +66,24 @@ public class IOHandler {
 		this.readBuffer = new ArrayList<Byte>();
 		this.readCallback = onRead;
 		this.listeners = new ArrayList<IOHandlerListener>();
+		this.lastRead = System.nanoTime();
 	}
 	
 	/**
 	 * Closes the streams
 	 * @throws IOException if any closing fails
 	 */
-	public void close() throws IOException {
-		if(closed) {
+	public void close() {
+		if(closing || closed) {
 			return;
 		}
+		closing = true;
 		this.notifyListeners(EventType.CLOSE_START);
 		try {
 			this.outputStream.flush();
 			this.outputStream.close();
 			closed = true;
 		} catch(Exception e) {
-			e.printStackTrace();
 			this.notifyListeners(EventType.CLOSE_FAILED, e);
 		}
 		this.notifyListeners(EventType.CLOSE_END);
@@ -88,41 +91,68 @@ public class IOHandler {
 	
 	/**
 	 * Reads data from the inputstream if there is data available.
-	 * The data read is being decoded using {@link IOHandler#charset}
 	 */
 	public void read() {
+		if(closing || closed) {
+			return;
+		}
 		try {
 			if(inputStream.available() > 0) {
 				readNBytes(MAX_READ_SIZE);
 			}
 		} catch (SocketException e) {
-			this.notifyListeners(EventType.DATA_READ_FAILED, e);
-			Thread.currentThread().interrupt();
+			if(e.getMessage().contains("Connection reset") || e.getMessage().contains("Socket closed")) {
+				close();
+			} else {
+				this.notifyListeners(EventType.DATA_READ_FAILED, e);
+			}
 		} catch (Exception e) {
 			this.notifyListeners(EventType.DATA_READ_FAILED, e);
-			Thread.currentThread().interrupt();
 		}
 	}
 	
-	private void readNBytes(int amount) throws IOException {
-		for(int i = 0; i < amount; i++) {
-			int iRead = inputStream.read();
-			if(iRead == -1) {
-				close();
-				return;
-			}
-			byte read = ((Integer)iRead).byteValue();
-			if(read != IOHandler.END_OF_MESSAGE_BYTE) {
-				readBuffer.add(read);
-			} else {
-				byte[] result = new byte[readBuffer.size()];
-				for(int j = 0; j < readBuffer.size(); j++) {
-				    result[j] = readBuffer.get(j).byteValue();
+	/**
+	 * Tries to read a set amount of bytes from the stream. 
+	 * If an end-of-message byte is detected the read bytes are passed to the
+	 * read callback. 
+	 * If an end of stream is detected the IOHandler is closed.
+	 * If more bytes are available than the amount that should be read they are left
+	 * in the stream until the next call
+	 * @param amount of bytes to read
+	 */
+	protected void readNBytes(int amount) {
+		if(closing || closed) {
+			return;
+		}
+		try {
+			for(int i = 0; i < amount; i++) {
+				int iRead = inputStream.read();
+				this.lastRead = System.nanoTime();
+				if(iRead == -1) {
+					close();
+					return;
 				}
-				readBuffer.clear();
-				readCallback.accept(result);
-				break;
+				byte read = ((Integer)iRead).byteValue();
+				if(read != IOHandler.END_OF_MESSAGE_BYTE) {
+					readBuffer.add(read);
+				} else {
+					byte[] result = new byte[readBuffer.size()];
+					for(int j = 0; j < readBuffer.size(); j++) {
+					    result[j] = readBuffer.get(j).byteValue();
+					}
+					readBuffer.clear();
+					readCallback.accept(result);
+					break;
+				}
 			}
+		} catch (SocketException e) {
+			if(e.getMessage().contains("Connection reset") || e.getMessage().contains("Socket closed")) {
+				close();
+			} else {
+				this.notifyListeners(EventType.DATA_READ_FAILED, e);
+			}
+		} catch (Exception e) {
+			this.notifyListeners(EventType.DATA_READ_FAILED, e);
 		}
 	}
 	
@@ -132,6 +162,9 @@ public class IOHandler {
 	 * @see java.io.PrintWriter
 	 */
 	public void write(byte[] data) {
+		if(closing || closed) {
+			return;
+		}
 		this.notifyListeners(EventType.WRITE, data);
 		try {
 			this.outputStream.write(data);
@@ -231,6 +264,14 @@ public class IOHandler {
 	 */
 	public boolean isClosed() {
 		return this.closed;
+	}
+	
+	/**
+	 * Returns the time that has passed since the last read in nanoseconds
+	 * @return the time that has passed since the last read in nanoseconds
+	 */
+	public long getTimeSinceLastRead() {
+		return System.nanoTime() - this.lastRead;
 	}
 	
 	/**
