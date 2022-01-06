@@ -1,6 +1,5 @@
 package dev.bitbite.networking;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.SocketException;
@@ -71,7 +70,6 @@ public class IOHandler {
 	
 	/**
 	 * Closes the streams
-	 * @throws IOException if any closing fails
 	 */
 	public void close() {
 		if(closing || closed) {
@@ -305,7 +303,7 @@ public class IOHandler {
 	 * Sets the maximum count of bytes that are being read at one time.
 	 * This is done so that a long message does not block other connections from reading for too long.
 	 * Higher values may result in longer answer times.
-	 * @param endOfMessageByte the maximum count of bytes that are being read at one time.
+	 * @param maxReadSize the maximum count of bytes that are being read at one time.
 	 */
 	public static void setMaxReadSize(int maxReadSize) {
 		IOHandler.MAX_READ_SIZE = maxReadSize;

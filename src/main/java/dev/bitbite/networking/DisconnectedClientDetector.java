@@ -58,7 +58,7 @@ public class DisconnectedClientDetector extends Thread {
 	/**
 	 * Sets the minimum time in nanoseconds to wait since the last read to check for disconnection.
 	 * Default is 5 seconds (5.000.000.000 nano seconds)
-	 * @param threshold
+	 * @param threshold time in nanoseconds to wait until checking
 	 */
 	public void setMaxReadThreshold(long threshold) {
 		this.MAX_READ_THRESHOLD = threshold;
