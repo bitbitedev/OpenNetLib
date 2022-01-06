@@ -1,0 +1,87 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+}
+
+group = 'dev.bitbite'
+version = '0.0.6-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(11)
+	}
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            groupId = 'dev.bitbite'
+            artifactId = 'OpenNetLib'
+			version = '0.0.6-SNAPSHOT'
+            pom {
+                name = 'OpenNetLib - A Java Networking Library'
+                description = 'OpenNetLib is a lightweight, easy-to-use library to simplify socket communication. It is written in and for Java. It\'s still in an early stage but saves a lot of time already. Start using OpenNetLib today or help improving it by posting issues, questions and feature requests here: https://github.com/bitbitedev/OpenNetLib/issues'
+                url = 'https://github.com/bitbitedev/OpenNetLib'
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://github.com/bitbitedev/OpenNetLib/blob/master/LICENSE'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'bitbite'
+                        name = 'Bitbite Team'
+                        email = 'team@bitbite.dev'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/bitbitedev/OpenNetLib.git'
+                    url = 'https://github.com/bitbitedev/OpenNetLib'
+                }
+            }
+
+        }
+    }
+    repositories {
+    	maven {
+    		credentials {
+    			username = ossrhUsername
+    			password = ossrhPassword
+    		}
+    		def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+    		def snapshotRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+    		url = version.endsWith('SNAPSHOT') ? snapshotRepoUrl : releasesRepoUrl
+    	}
+    }
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+signing {
+    sign publishing.publications.maven
+}
+javadoc {
+    if(JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
+}
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+}
+dependencies {
+    // Use JUnit Jupiter for testing.
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.2'
+}
+
+tasks.named('test') {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
+}

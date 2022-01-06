@@ -1,5 +1,18 @@
-/bin/
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+
+# Ignore eclipse settings
+.settings
 .project
 .classpath
-.settings
-OpenNetLib*.jar
+
+# Ignore compiled binaries
+bin
+*.class
+
+# Ignore files with sensizive data
+gradle.properties
+secring.gpg
