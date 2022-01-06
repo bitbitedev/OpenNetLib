@@ -24,6 +24,7 @@ jobs:
       env:
         GPG_KEY: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
       run: |
+        export GPG_TTY=$(tty)
         echo "$GPG_KEY" > "kf.key"
         gpg --import kf.key
         gpg --list-secret-keys --keyid-format LONG
