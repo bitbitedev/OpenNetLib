@@ -9,7 +9,7 @@ name: Java CI with Gradle
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master,github-ci ]
   pull_request:
     branches: [ master ]
 
@@ -23,7 +23,7 @@ jobs:
     - name: Install gpg secret key
       run: |
         kf=kf.key
-        echo -e "${{ secrets.OSSRH_GPG_SECRET_KEY }}" > "$kf"
+        echo -e "${ secrets.OSSRH_GPG_SECRET_KEY }" > "$kf"
         gpg --import kf.key
         gpg --list-secret-keys --keyid-format LONG
     - name: Set up JDK 11
