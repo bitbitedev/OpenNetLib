@@ -30,6 +30,7 @@ jobs:
       with:
         java-version: '11'
         distribution: 'adopt'
+        cache: gradle
     - name: Validate Gradle wrapper
       uses: gradle/gradle-build-action@4137be6a8bf7d7133955359dbd952c0ca73b1021
     - name: Build package
