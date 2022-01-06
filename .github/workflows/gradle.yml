@@ -24,8 +24,8 @@ jobs:
       env:
         GPG_KEY: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
       run: |
-        kf=kf.key
-        echo -e "$GPG_KEY" > "$kf"
+        echo "$GPG_KEY" > "kf.key"
+        cat kf.key
         gpg --import kf.key
         gpg --list-secret-keys --keyid-format LONG
     - name: Set up JDK 11
