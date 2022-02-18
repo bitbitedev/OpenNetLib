@@ -57,6 +57,21 @@ public class CommunicationHandler {
 	}
 	
 	/**
+	 * Forces the currently read bytes to be handled
+	 */
+	public void flushRead() {
+		this.ioHandler.flushRead();
+	}
+	
+	/**
+	 * Blocks until the given amount of bytes are read
+	 * @param amount
+	 */
+	public void readNBytes(int amount) {
+		this.ioHandler.readToNBytes(amount);
+	}
+	
+	/**
 	 * Gets called by the IOHandler when data is received from the client.
 	 * It lets the {@link DataPreProcessor} process the data and then
 	 *  forwards the data to the server.
