@@ -134,12 +134,7 @@ public class IOHandler {
 				if(read != IOHandler.END_OF_MESSAGE_BYTE) {
 					readBuffer.add(read);
 				} else {
-					byte[] result = new byte[readBuffer.size()];
-					for(int j = 0; j < readBuffer.size(); j++) {
-					    result[j] = readBuffer.get(j).byteValue();
-					}
-					readBuffer.clear();
-					readCallback.accept(result);
+					flushRead();
 					break;
 				}
 			}
@@ -152,6 +147,29 @@ public class IOHandler {
 		} catch (Exception e) {
 			this.notifyListeners(EventType.DATA_READ_FAILED, e);
 		}
+	}
+	
+	/**
+	 * Reads bytes until the buffer contains the given amount of bytes
+	 * @param total number of bytes to be read to the buffer until it gets flushed
+	 */
+	protected void readToNBytes(int total) {
+		while(readBuffer.size() < total) {
+			readNBytes(1);
+		}
+		flushRead();
+	}
+	
+	/**
+	 * Calls the readCallback with the bytes currently contained in the buffer
+	 */
+	protected void flushRead() {
+		byte[] result = new byte[readBuffer.size()];
+		for(int i = 0; i < readBuffer.size(); i++) {
+		    result[i] = readBuffer.get(i).byteValue();
+		}
+		readBuffer.clear();
+		readCallback.accept(result);
 	}
 	
 	/**
