@@ -18,7 +18,7 @@ To use it unpack the archive file and add the Jar file to your projects dependen
 ### Gradle
 If you are using gradle add the following line to your dependencies:
 ```
-implementation 'dev.bitbite:OpenNetLib:1.0.0'
+implementation 'dev.bitbite:OpenNetLib:1.0.1'
 ```
 
 ### Maven
@@ -27,7 +27,7 @@ For Maven use the following:
 <dependency>
   <groupId>dev.bitbite</groupId>
   <artifactId>OpenNetLib</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 ```
 

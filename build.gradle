@@ -21,7 +21,7 @@ publishing {
             from components.java
             groupId = 'dev.bitbite'
             artifactId = 'OpenNetLib'
-			version = '1.1.0'
+			      version = '1.1.0'
             pom {
                 name = 'OpenNetLib - A Java Networking Library'
                 description = 'OpenNetLib is a lightweight, easy-to-use library to simplify socket communication. It is written in and for Java. It\'s still in an early stage but saves a lot of time already. Start using OpenNetLib today or help improving it by posting issues, questions and feature requests here: https://github.com/bitbitedev/OpenNetLib/issues'
