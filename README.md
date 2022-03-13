@@ -32,7 +32,7 @@ For Maven use the following:
 ```
 
 ### Other build tools
-Vistit [maven central](https://search.maven.org/artifact/dev.bitbite/OpenNetLib) and choose the latest release to find the code you need to add
+Visit [maven central](https://search.maven.org/artifact/dev.bitbite/OpenNetLib) and choose the latest release to find the code you need to add
 
 ## Features
 - Byte-based socket communication
