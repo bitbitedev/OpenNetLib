@@ -6,6 +6,8 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
+import lombok.Getter;
+
 /**
  * This IOHandler class combines an input- and an output stream object into a single class.
  * Incoming data of the inputstream will be propagated to the onRead consumer method passed
@@ -21,7 +23,7 @@ public class IOHandler {
 	private static int MAX_READ_SIZE = 1024;
 	
 	private boolean closing = false;
-	private boolean closed = false;
+	@Getter private boolean closed = false;
 	private InputStream inputStream;
 	private OutputStream outputStream;
 	private ArrayList<Byte> readBuffer;
@@ -272,14 +274,6 @@ public class IOHandler {
 				listeners.forEach(l -> l.onWriteFailed((Exception)args[0]));
 				break;
 		}
-	}
-	
-	/**
-	 * Returns if this IOHandler is closed
-	 * @return if this IOHandler is closed
-	 */
-	public boolean isClosed() {
-		return this.closed;
 	}
 	
 	/**

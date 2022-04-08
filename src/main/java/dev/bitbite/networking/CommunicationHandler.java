@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import dev.bitbite.networking.Server.EventType;
+import lombok.Getter;
 
 /**
  * Manages the Communication with a client by handling its IO.
@@ -13,7 +14,7 @@ public class CommunicationHandler {
 
 	private Socket clientSocket;
 	private ClientManager clientManager;
-	private IOHandler ioHandler;
+	@Getter private IOHandler iOHandler;
 	
 	/**
 	 * Creates a CommunicationHandler object for a socket
@@ -24,10 +25,10 @@ public class CommunicationHandler {
 		this.clientSocket = clientSocket;
 		this.clientManager = clientManager;
 		try {
-			this.ioHandler = new IOHandler(clientSocket.getInputStream(), 
+			this.iOHandler = new IOHandler(clientSocket.getInputStream(), 
 										   clientSocket.getOutputStream(),
 										   this::processReceivedData);
-			this.ioHandler.registerListener(new CommunicationHandlerCloseListener(this));
+			this.iOHandler.registerListener(new CommunicationHandlerCloseListener(this));
 		} catch (IOException e) {
 			this.clientManager.getServer().notifyListeners(Server.EventType.COMMUNICATIONHANDLER_INIT_FAILED, e);
 		}
@@ -39,7 +40,7 @@ public class CommunicationHandler {
 	public void close() {
 		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE, this);
 		try {
-			this.ioHandler.close();
+			this.iOHandler.close();
 			this.clientSocket.close();
 			this.clientManager.removeCommunicationHandler(this);
 		} catch(Exception e) {
@@ -53,14 +54,14 @@ public class CommunicationHandler {
 	 * @param data to send
 	 */
 	protected void send(byte[] data) {
-		this.ioHandler.write(data);
+		this.iOHandler.write(data);
 	}
 	
 	/**
 	 * Forces the currently read bytes to be handled
 	 */
 	public void flushRead() {
-		this.ioHandler.flushRead();
+		this.iOHandler.flushRead();
 	}
 	
 	/**
@@ -68,7 +69,7 @@ public class CommunicationHandler {
 	 * @param amount
 	 */
 	public void readNBytes(int amount) {
-		this.ioHandler.readToNBytes(amount);
+		this.iOHandler.readToNBytes(amount);
 	}
 	
 	/**
@@ -88,7 +89,7 @@ public class CommunicationHandler {
 	 * @param listener to add
 	 */
 	public void registerListener(IOHandlerListener listener) {
-		this.ioHandler.registerListener(listener);
+		this.iOHandler.registerListener(listener);
 	}
 	
 	/**
@@ -96,17 +97,9 @@ public class CommunicationHandler {
 	 * @param listener to add
 	 */
 	public void registerListener(ArrayList<IOHandlerListener> listener) {
-		listener.forEach(l -> this.ioHandler.registerListener(l));
+		listener.forEach(l -> this.iOHandler.registerListener(l));
 	}
 
-	/**
-	 * Returns the IOHandler associated with this communicationHandler
-	 * @return the IOHandler associated with this communicationHandler
-	 */
-	public IOHandler getIOHandler() {
-		return this.ioHandler;
-	}
-	
 	/**
 	 * @return the remote socket address of the associated client socket
 	 */

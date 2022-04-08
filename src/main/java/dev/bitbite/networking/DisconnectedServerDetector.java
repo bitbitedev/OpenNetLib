@@ -7,6 +7,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import lombok.Getter;
+
 /**
  * This Thread attempts to detect if the server has closed the connection.
  * Every second it checks if since the last read of the server
@@ -16,7 +18,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class DisconnectedServerDetector extends Thread {
 
-	private long MAX_READ_THRESHOLD = 5_000_000_000L;
+	@Getter private long MAX_READ_THRESHOLD = 5_000_000_000L;
 	private Client client;
 	private ExecutorService executorService;
 	

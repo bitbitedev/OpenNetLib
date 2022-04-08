@@ -1,12 +1,11 @@
 package dev.bitbite.networking;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public class ClientCloseListener extends IOHandlerListener {
 
 	private Client client;
-	
-	public ClientCloseListener(Client client) {
-		this.client = client;
-	}
 	
 	@Override
 	public void onCloseEnd() {
