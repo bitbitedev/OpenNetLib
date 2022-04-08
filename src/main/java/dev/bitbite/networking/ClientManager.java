@@ -4,6 +4,8 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import lombok.Getter;
+
 /**
  * Administrates the clients an runs in its own Thread. It accepts them from the serversocket and
  * starts a {@link CommunicationHandler} in a separate thread for each connecting client.<br>
@@ -13,9 +15,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class ClientManager extends Thread {
 
 	private boolean closing = false;
-	private final Server server;
+	@Getter private final Server server;
 	private Thread readThread;
-	private CopyOnWriteArrayList<CommunicationHandler> communicationHandler;
+	@Getter private CopyOnWriteArrayList<CommunicationHandler> communicationHandler;
 	
 	/**
 	 * Initiates a ClientManager object
@@ -52,7 +54,7 @@ public class ClientManager extends Thread {
 				clientSocket = this.server.getServerSocket().accept();
 				if(clientSocket == null) continue;
 				CommunicationHandler ch = new CommunicationHandler(clientSocket, this);
-				ch.registerListener(this.server.getIOHandlerListeners());
+				ch.registerListener(this.server.getIOListeners());
 				this.communicationHandler.add(ch);
 				this.server.notifyListeners(Server.EventType.ACCEPT, ch);
 			} catch(SocketTimeoutException e) {
@@ -110,22 +112,6 @@ public class ClientManager extends Thread {
 			}
 		}
 		return null;
-	}
-	
-	/**
-	 * Returns the server object related to this clientmanager
-	 * @return the serverobject
-	 */
-	protected Server getServer() {
-		return this.server;
-	}
-
-	/**
-	 * Returns a list of CommunicationHandlers
-	 * @return a list of CommunicationHandlers
-	 */
-	protected CopyOnWriteArrayList<CommunicationHandler> getCommunicationHandler() {
-		return this.communicationHandler;
 	}
 	
 	/**

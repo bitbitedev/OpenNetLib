@@ -1,12 +1,11 @@
 package dev.bitbite.networking;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public class CommunicationHandlerCloseListener extends IOHandlerListener {
 
 	private CommunicationHandler communicationHandler;
-	
-	public CommunicationHandlerCloseListener(CommunicationHandler communicationHandler) {
-		this.communicationHandler = communicationHandler;
-	}
 	
 	@Override
 	public void onCloseEnd() {

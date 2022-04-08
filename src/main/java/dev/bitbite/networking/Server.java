@@ -2,11 +2,12 @@ package dev.bitbite.networking;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.SocketException;
 import java.util.ArrayList;
 
 import dev.bitbite.networking.DataPreProcessor.TransferMode;
 import dev.bitbite.networking.exceptions.LayerDisableFailedException;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Represents an abstract implementation of the server-side connection.<br>
@@ -30,13 +31,13 @@ import dev.bitbite.networking.exceptions.LayerDisableFailedException;
 public abstract class Server {
 
 	public final int PORT;
-	protected ServerSocket serverSocket;
-	protected ClientManager clientManager;
-	protected DataPreProcessor dataPreProcessor;
+	@Getter protected ServerSocket serverSocket;
+	@Getter protected ClientManager clientManager;
+	@Getter protected DataPreProcessor dataPreProcessor;
 	protected DisconnectedClientDetector disconnectedClientDetector;
-	protected ArrayList<ServerListener> listeners;
-	protected ArrayList<IOHandlerListener> ioListeners;
-	private int SO_TIMEOUT = 0;
+	@Getter protected ArrayList<ServerListener> listeners;
+	@Getter protected ArrayList<IOHandlerListener> iOListeners;
+	@Getter @Setter private int SO_TIMEOUT = 0;
 	
 	/**
 	 * The different event-types, which occur in the server, listeners can listen on
@@ -74,7 +75,7 @@ public abstract class Server {
 		this.disconnectedClientDetector = new DisconnectedClientDetector(this);
 		this.disconnectedClientDetector.setName("Disconnected Client Detector");
 		this.listeners = new ArrayList<ServerListener>();
-		this.ioListeners = new ArrayList<IOHandlerListener>();
+		this.iOListeners = new ArrayList<IOHandlerListener>();
 	}
 	
 	/**
@@ -130,7 +131,7 @@ public abstract class Server {
 	protected abstract void processReceivedData(String clientAddress, byte[] data);
 
 	public boolean send(String clientAddress, byte[] data) {
-		data = this.getDataPreProcessor().process(TransferMode.OUT, data);
+		data = this.dataPreProcessor.process(TransferMode.OUT, data);
 		this.clientManager.getCommunicationHandlerByIP(clientAddress).send(data);
 		return true;
 	}
@@ -140,7 +141,7 @@ public abstract class Server {
 	 * @param data to broadcast
 	 */
 	public void broadcast(byte[] data) {
-		byte[] processedData = this.getDataPreProcessor().process(TransferMode.OUT, data);
+		byte[] processedData = this.dataPreProcessor.process(TransferMode.OUT, data);
 		this.clientManager.getCommunicationHandler().forEach(ch -> ch.send(processedData));
 	}
 	
@@ -157,7 +158,7 @@ public abstract class Server {
 	 * @param listener to add
 	 */
 	public void registerListener(IOHandlerListener listener) {
-		ioListeners.add(listener);
+		iOListeners.add(listener);
 	}
 	
 	/**
@@ -175,8 +176,8 @@ public abstract class Server {
 	 * @param listener to remove
 	 */
 	public void removeListener(IOHandlerListener listener) {
-		if(ioListeners.contains(listener)) {
-			ioListeners.remove(listener);
+		if(iOListeners.contains(listener)) {
+			iOListeners.remove(listener);
 		}
 	}
 	
@@ -295,52 +296,4 @@ public abstract class Server {
 		}
 	}
 	
-	/**
-	 * Returns the current ServerSocket
-	 * @return the current ServerSocket
-	 */
-	protected ServerSocket getServerSocket() {
-		return this.serverSocket;
-	}
-	
-	/**
-	 * Returns the current ClientManager
-	 * @return the current ClientManager
-	 */
-	public ClientManager getClientManager() {
-		return clientManager;
-	}
-
-	/**
-	 * Returns a list of all ServerListeners registered at the server
-	 * @return the list of ServerListeners
-	 */
-	public ArrayList<ServerListener> getServerListeners(){
-		return this.listeners;
-	}
-	
-	/**
-	 * Returns a list of all IOHandlers registered at the server
-	 * @return the list of IOHandlers
-	 */
-	public ArrayList<IOHandlerListener> getIOHandlerListeners(){
-		return this.ioListeners;
-	}
-	
-	/**
-	 * Returns the DataPreProcessor of this server object.
-	 * @return the DataPreProcessor of this server object
-	 */
-	protected DataPreProcessor getDataPreProcessor() {
-		return this.dataPreProcessor;
-	}
-	
-	/**
-	 * Sets SO_TIMEOUT of the serversocket
-	 * @param timeout in milliseconds after which blocking operations should stop blocking
-	 * @throws SocketException when setting SO_TIMEOUT fails
-	 */
-	public void setSoTimeout(int timeout) throws SocketException {
-		this.SO_TIMEOUT = timeout;
-	}
 }

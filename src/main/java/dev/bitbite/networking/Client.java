@@ -7,6 +7,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import dev.bitbite.networking.DataPreProcessor.TransferMode;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Represents an abstract implementation of the client-side connection.<br>
@@ -24,12 +26,12 @@ import dev.bitbite.networking.DataPreProcessor.TransferMode;
  */
 public abstract class Client {
 
-	private boolean closed;
+	@Getter @Setter private boolean closed;
 	public final String HOST;
 	public final int PORT;
 	protected Socket socket;
-	private IOHandler ioHandler;
-	private DataPreProcessor dataPreProcessor;
+	@Getter private IOHandler iOHandler;
+	@Getter private DataPreProcessor dataPreProcessor;
 	protected DisconnectedServerDetector disconnectedServerDetector;
 	private Thread readThread;
 	private boolean keepAlive = false;
@@ -87,8 +89,8 @@ public abstract class Client {
 		try {
 			this.notifyListeners(EventType.CONNECTION);
 			this.openSocket();
-			this.ioHandler = new IOHandler(this.socket.getInputStream(), this.socket.getOutputStream(), this::preprocessReceivedData);
-			this.ioListeners.forEach(l -> this.ioHandler.registerListener(l));
+			this.iOHandler = new IOHandler(this.socket.getInputStream(), this.socket.getOutputStream(), this::preprocessReceivedData);
+			this.ioListeners.forEach(l -> this.iOHandler.registerListener(l));
 			if(this.socket.isConnected()) {
 				this.notifyListeners(EventType.CONNECTION_SUCCESS);
 				this.socket.setKeepAlive(this.keepAlive);
@@ -98,7 +100,7 @@ public abstract class Client {
 			}
 			this.readThread = new Thread(()->{
 				while(!Thread.interrupted()) {
-					this.getIOHandler().read();
+					this.iOHandler.read();
 				}
 				Thread.currentThread().interrupt();
 			});
@@ -136,7 +138,7 @@ public abstract class Client {
 		try {
 			this.notifyListeners(EventType.CLOSE);
 			this.readThread.interrupt();
-			this.ioHandler.close();
+			this.iOHandler.close();
 			this.socket.close();
 			this.disconnectedServerDetector.interrupt();
 		} catch(Exception e) {
@@ -154,7 +156,7 @@ public abstract class Client {
 	 */
 	public void send(byte[] data) {
 		data = dataPreProcessor.process(TransferMode.OUT, data);
-		this.ioHandler.write(data);
+		this.iOHandler.write(data);
 	}
 	
 	/**
@@ -187,8 +189,8 @@ public abstract class Client {
 	 */
 	public void registerListener(IOHandlerListener listener) {
 		this.ioListeners.add(listener);
-		if(this.ioHandler != null) {
-			this.ioHandler.registerListener(listener);
+		if(this.iOHandler != null) {
+			this.iOHandler.registerListener(listener);
 		}
 	}
 	
@@ -209,7 +211,7 @@ public abstract class Client {
 	public void removeListener(IOHandlerListener listener) {
 		if(this.ioListeners.contains(listener)) {
 			this.ioListeners.remove(listener);
-			this.ioHandler.removeListener(listener);
+			this.iOHandler.removeListener(listener);
 		}
 	}
 	
@@ -269,30 +271,6 @@ public abstract class Client {
 			return false;
 		}
 		return this.socket.isConnected();
-	}
-	
-	public boolean isClosed() {
-		return closed;
-	}
-
-	public void setClosed(boolean closed) {
-		this.closed = closed;
-	}
-
-	/**
-	 * Returns the IOHandler associated with the client object
-	 * @return the IOHandler
-	 */
-	public IOHandler getIOHandler() {
-		return this.ioHandler;
-	}
-	
-	/**
-	 * Returns the DataPreProcessor associated with the client object
-	 * @return the DataPreProcessor
-	 */
-	public DataPreProcessor getDataPreProcessor() {
-		return this.dataPreProcessor;
 	}
 	
 }
