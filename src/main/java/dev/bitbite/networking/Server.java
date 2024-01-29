@@ -38,6 +38,8 @@ public abstract class Server {
 	@Getter protected ArrayList<ServerListener> listeners;
 	@Getter protected ArrayList<IOHandlerListener> iOListeners;
 	@Getter @Setter private int SO_TIMEOUT = 0;
+
+	@Getter @Setter private static boolean VERBOSE = false;
 	
 	/**
 	 * The different event-types, which occur in the server, listeners can listen on
@@ -194,6 +196,9 @@ public abstract class Server {
 	 * @see ServerListener
 	 */
 	protected void notifyListeners(EventType type, Object... args) {
+		if(Server.VERBOSE && args.length > 0 && args[0] instanceof Exception) {
+			((Exception)args[0]).printStackTrace();
+		}
 		switch(type) {
 			case START:
 				this.listeners.forEach(l -> l.onStart());

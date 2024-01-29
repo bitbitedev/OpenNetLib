@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 
 import lombok.Getter;
+import lombok.Setter;
 
 /**
  * This IOHandler class combines an input- and an output stream object into a single class.
@@ -21,6 +22,7 @@ public class IOHandler {
 
 	private static byte END_OF_MESSAGE_BYTE = 0x0A;
 	private static int MAX_READ_SIZE = 1024;
+	@Getter @Setter private static boolean VERBOSE = false;
 	
 	private boolean closing = false;
 	@Getter private boolean closed = false;
@@ -225,6 +227,9 @@ public class IOHandler {
 	 * @see IOHandlerListener
 	 */
 	private void notifyListeners(EventType type, Object... args) {
+		if(IOHandler.VERBOSE && args.length > 0 && args[0] instanceof Exception) {
+			((Exception)args[0]).printStackTrace();
+		}
 		switch(type) {
 			case DATA_READ_START:
 				listeners.forEach(l -> l.onDataReadStart());

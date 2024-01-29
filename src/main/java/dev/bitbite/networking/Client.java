@@ -37,6 +37,8 @@ public abstract class Client {
 	private boolean keepAlive = false;
 	private ArrayList<ClientListener> listeners;
 	private ArrayList<IOHandlerListener> ioListeners;
+
+	@Getter @Setter private static boolean VERBOSE = false;
 	
 	/**
 	 * The different event-types, which occur in the client, listeners can listen on
@@ -228,6 +230,9 @@ public abstract class Client {
 	 * @see ClientListener
 	 */
 	private void notifyListeners(EventType type, Object... args) {
+		if(Client.VERBOSE && args.length > 0 && args[0] instanceof Exception) {
+			((Exception)args[0]).printStackTrace();
+		}
 		switch(type) {
 			case CONNECTION:
 				this.listeners.forEach(l -> l.onConnectionCreation());
