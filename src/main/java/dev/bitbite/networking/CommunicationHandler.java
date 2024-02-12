@@ -66,7 +66,7 @@ public class CommunicationHandler {
 	
 	/**
 	 * Blocks until the given amount of bytes are read
-	 * @param amount
+	 * @param amount of bytes to read
 	 */
 	public void readNBytes(int amount) {
 		this.iOHandler.readToNBytes(amount);

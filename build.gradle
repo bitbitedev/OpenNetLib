@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'dev.bitbite'
-version = '2.0.1'
+version = '2.0.2'
 
 java {
 	toolchain {
@@ -21,7 +21,7 @@ publishing {
             from components.java
             groupId = 'dev.bitbite'
             artifactId = 'OpenNetLib'
-			      version = '2.0.1'
+			      version = '2.0.2'
             pom {
                 name = 'OpenNetLib - A Java Networking Library'
                 description = 'OpenNetLib is a lightweight, easy-to-use library to simplify socket communication. It is written in and for Java. It\'s still in an early stage but saves a lot of time already. Start using OpenNetLib today or help improving it by posting issues, questions and feature requests here: https://github.com/bitbitedev/OpenNetLib/issues'
@@ -82,7 +82,6 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     
     //lombok
-    implementation 'org.projectlombok:lombok:1.18.30'
     compileOnly 'org.projectlombok:lombok:1.18.30'
 	annotationProcessor 'org.projectlombok:lombok:1.18.30'
 }

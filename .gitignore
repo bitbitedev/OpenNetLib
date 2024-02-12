@@ -9,6 +9,9 @@ build
 .project
 .classpath
 
+# Ignore idea settings
+.idea
+
 # Ignore compiled binaries
 bin
 *.class
@@ -16,3 +19,6 @@ bin
 # Ignore files with sensizive data
 gradle.properties
 secring.gpg
+
+# Ignore vscode files
+.vscode

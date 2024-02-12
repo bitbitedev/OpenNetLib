@@ -109,7 +109,7 @@ public abstract class Server {
 	
 	/**
 	 * Initiates the closing process of the Server with closing the {@link ClientManager} and disabling the {@link DataProcessingLayer}s.
-	 * Finally it closes the serverSocket
+	 * Finally, it closes the serverSocket
 	 */
 	public void close() {
 		this.notifyListeners(EventType.CLOSE);
@@ -168,9 +168,7 @@ public abstract class Server {
 	 * @param listener to remove
 	 */
 	public void removeListener(ServerListener listener) {
-		if(listeners.contains(listener)) {
-			listeners.remove(listener);
-		}
+        listeners.remove(listener);
 	}
 	
 	/**
@@ -178,9 +176,7 @@ public abstract class Server {
 	 * @param listener to remove
 	 */
 	public void removeListener(IOHandlerListener listener) {
-		if(iOListeners.contains(listener)) {
-			iOListeners.remove(listener);
-		}
+        iOListeners.remove(listener);
 	}
 	
 	/**
@@ -201,10 +197,10 @@ public abstract class Server {
 		}
 		switch(type) {
 			case START:
-				this.listeners.forEach(l -> l.onStart());
+				this.listeners.forEach(ServerListener::onStart);
 				break;
 			case START_SUCCESS:
-				this.listeners.forEach(l -> l.onStartSuccess());
+				this.listeners.forEach(ServerListener::onStartSuccess);
 				break;
 			case START_FAILED:
 				if(args.length == 0) {
@@ -223,10 +219,10 @@ public abstract class Server {
 				this.listeners.forEach(l -> l.onAccept((CommunicationHandler)args[0]));
 				break;
 			case ACCEPT_END:
-				this.listeners.forEach(l -> l.onAcceptEnd());
+				this.listeners.forEach(ServerListener::onAcceptEnd);
 				break;
 			case ACCEPT_START:
-				this.listeners.forEach(l -> l.onAcceptStart());
+				this.listeners.forEach(ServerListener::onAcceptStart);
 				break;
 			case ACCEPT_FAILED:
 				if(args.length == 0) {
@@ -244,7 +240,7 @@ public abstract class Server {
 						throw new IllegalArgumentException("Expected object of type Exception, but got "+args[0].getClass().getSimpleName());
 					}
 					this.listeners.forEach(l -> l.onSocketClosed((Exception)args[0]));
-				} else if(args.length >= 2) {
+				} else {
 					if(!(args[0] instanceof Exception) || !(args[1] instanceof String)) {
 						throw new IllegalArgumentException("Expected objects of type Exception and String, but got "+args[0].getClass().getSimpleName()+" and "+args[1].getClass().getSimpleName());
 					}
@@ -253,10 +249,10 @@ public abstract class Server {
 				
 				break;
 			case CLOSE:
-				this.listeners.forEach(l -> l.onClose());
+				this.listeners.forEach(ServerListener::onClose);
 				break;
 			case CLOSE_END:
-				this.listeners.forEach(l -> l.onCloseEnd());
+				this.listeners.forEach(ServerListener::onCloseEnd);
 				break;
 			case CLOSE_FAILED:
 				if(args.length == 0) {
