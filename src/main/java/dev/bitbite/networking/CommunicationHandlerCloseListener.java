@@ -12,6 +12,7 @@ public class CommunicationHandlerCloseListener extends IOHandlerListener {
 	/**
 	 * private constructor to prevent instantiation without a CommunicationHandler object
 	 */
+	@SuppressWarnings("unused")
 	private CommunicationHandlerCloseListener() {}
 
 	private CommunicationHandler communicationHandler;

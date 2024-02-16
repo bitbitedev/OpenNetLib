@@ -12,6 +12,7 @@ public class ClientCloseListener extends IOHandlerListener {
 	/**
 	 * private constructor to prevent instantiation without a client object
 	 */
+	@SuppressWarnings("unused")
 	private ClientCloseListener() {}
 
 	private Client client;
