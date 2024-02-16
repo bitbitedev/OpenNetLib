@@ -26,18 +26,54 @@ import lombok.Setter;
  */
 public abstract class Client {
 
+	/**
+	 * An indicator whether the connection is closed
+	 */
 	@Getter @Setter private boolean closed;
+	/**
+	 * The host to connect to
+	 */
 	public final String HOST;
+	/**
+	 * The port to connect to
+	 */
 	public final int PORT;
+	/**
+	 * The socket used for the connection
+	 */
 	protected Socket socket;
+	/**
+	 * The IOHandler used for the connection
+	 */
 	@Getter private IOHandler iOHandler;
+	/**
+	 * The DataPreProcessor used for the connection
+	 */
 	@Getter private DataPreProcessor dataPreProcessor;
+	/**
+	 * The DisconnectedServerDetector used for the connection
+	 */
 	protected DisconnectedServerDetector disconnectedServerDetector;
+	/**
+	 * The readThread used for the connection
+	 */
 	private Thread readThread;
+	/**
+	 * An indicator whether the connection should be kept alive
+	 */
 	private boolean keepAlive = false;
+	/**
+	 * The listeners that are registered to the client
+	 */
 	private ArrayList<ClientListener> listeners;
+	/**
+	 * The listeners that are registered to the IOHandler
+	 */
 	private ArrayList<IOHandlerListener> ioListeners;
 
+	/**
+	 * An indicator whether the client should print stacktraces of exceptions
+	 */
 	@Getter @Setter private static boolean VERBOSE = false;
 	
 	/**

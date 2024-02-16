@@ -8,6 +8,7 @@ public class LayerInitFailedException extends Exception {
 	private static final long serialVersionUID = 1L;
 	
 	/**
+	 * Creates a new LayerInitFailedException
 	 * @param message error description
 	 */
 	public LayerInitFailedException(String message) {

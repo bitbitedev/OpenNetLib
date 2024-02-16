@@ -11,6 +11,11 @@ package dev.bitbite.networking;
 public abstract class ClientListener {
 
 	/**
+	 * Creates a new ClientListener
+	 */
+	public ClientListener() {}
+
+	/**
 	 * Will be called before the Client tries to connect to the server
 	 */
 	public void onConnectionCreation() {}

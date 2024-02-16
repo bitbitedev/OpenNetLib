@@ -30,15 +30,42 @@ import lombok.Setter;
  */
 public abstract class Server {
 
+	/**
+	 * The port the server will listen on
+	 */
 	public final int PORT;
+	/**
+	 * The ServerSocket the server will use to listen for incoming connections
+	 */
 	@Getter protected ServerSocket serverSocket;
+	/**
+	 * The ClientManager the server will use to manage all connected clients
+	 */
 	@Getter protected ClientManager clientManager;
+	/**
+	 * The DataPreProcessor the server will use to process incoming and outgoing data
+	 */
 	@Getter protected DataPreProcessor dataPreProcessor;
+	/**
+	 * The DisconnectedClientDetector the server will use to detect disconnected clients
+	 */
 	protected DisconnectedClientDetector disconnectedClientDetector;
+	/**
+	 * The list of registered ServerListeners
+	 */
 	@Getter protected ArrayList<ServerListener> listeners;
+	/**
+	 * The list of registered IOHandlerListeners
+	 */
 	@Getter protected ArrayList<IOHandlerListener> iOListeners;
+	/**
+	 * The timeout for the serverSocket
+	 */
 	@Getter @Setter private int SO_TIMEOUT = 0;
 
+	/**
+	 * If set to true, the server will print stacktraces of exceptions
+	 */
 	@Getter @Setter private static boolean VERBOSE = false;
 	
 	/**
@@ -132,6 +159,12 @@ public abstract class Server {
 	 */
 	protected abstract void processReceivedData(String clientAddress, byte[] data);
 
+	/**
+	 * Sends the data to the client with the specified address.
+	 * @param clientAddress to send the data to
+	 * @param data to send
+	 * @return true if the data has been sent successfully
+	 */
 	public boolean send(String clientAddress, byte[] data) {
 		data = this.dataPreProcessor.process(TransferMode.OUT, data);
 		this.clientManager.getCommunicationHandlerByIP(clientAddress).send(data);

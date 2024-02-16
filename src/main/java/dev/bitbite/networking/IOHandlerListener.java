@@ -11,6 +11,11 @@ package dev.bitbite.networking;
 public abstract class IOHandlerListener {
 
 	/**
+	 * Creates a new IOHandlerListener
+	 */
+	public IOHandlerListener() {}
+
+	/**
 	 * Will be called before the process of reading data from the inputStream
 	 * is being started
 	 */

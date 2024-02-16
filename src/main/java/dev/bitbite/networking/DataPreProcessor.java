@@ -11,8 +11,6 @@ import dev.bitbite.networking.exceptions.LayerInitFailedException;
  * Layers will process the data in the order they are registered.
  * 
  * @see DataProcessingLayer
- * 
- * @version 0.0.3-alpha
  */
 public class DataPreProcessor {
 
@@ -21,11 +19,16 @@ public class DataPreProcessor {
 	
 	/**
 	 * The Transfer directions data can travel
-	 *
-	 * @version 0.0.1-alpha
 	 */
 	public enum TransferMode {
-		IN, OUT;
+		/**
+		 * Data is incoming
+		 */
+		IN, 
+		/**
+		 * Data is outgoing
+		 */
+		OUT;
 	}
 	
 	/**

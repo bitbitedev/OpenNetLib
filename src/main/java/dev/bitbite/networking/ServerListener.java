@@ -11,6 +11,11 @@ package dev.bitbite.networking;
 public abstract class ServerListener {
 
 	/**
+	 * Creates a new ServerListener
+	 */
+	public ServerListener() {}
+
+	/**
 	 * Will be called before server startup
 	 */
 	public void onStart() {}

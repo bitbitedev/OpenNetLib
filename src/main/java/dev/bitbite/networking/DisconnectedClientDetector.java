@@ -20,6 +20,10 @@ public class DisconnectedClientDetector extends Thread {
 	private Server server;
 	private ExecutorService executorService;
 	
+	/**
+	 * Creates a DisconnectedClientDetector for a server
+	 * @param server to detect disconnected clients for
+	 */
 	public DisconnectedClientDetector(Server server) {
 		this.server = server;
 		this.executorService = Executors.newSingleThreadExecutor((r) -> {
@@ -29,6 +33,9 @@ public class DisconnectedClientDetector extends Thread {
         });
 	}
 	
+	/**
+	 * Starts the detection process
+	 */
 	@Override
 	public void run() {
 		while(!Thread.interrupted()) {

@@ -8,6 +8,7 @@ public class LayerDisableFailedException extends Exception {
 	private static final long serialVersionUID = 1L;
 	
 	/**
+	 * Creates a new LayerDisableFailedException
 	 * @param message error description
 	 */
 	public LayerDisableFailedException(String message) {
