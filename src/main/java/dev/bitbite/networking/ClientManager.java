@@ -16,7 +16,6 @@ public class ClientManager extends Thread {
 
 	private boolean closing = false;
 	@Getter private final Server server;
-	private Thread readThread;
 	@Getter private CopyOnWriteArrayList<CommunicationHandler> communicationHandler;
 	
 	/**
@@ -37,13 +36,6 @@ public class ClientManager extends Thread {
 	@Override
 	public void run() {
 		this.server.notifyListeners(Server.EventType.ACCEPT_START);
-		this.readThread = new Thread(()->{
-			while(!readThread.isInterrupted()) {
-				this.communicationHandler.forEach(ch -> ch.getIOHandler().read());
-			}
-		});
-		readThread.setName("Data reader");
-		readThread.start();
 		while(!Thread.currentThread().isInterrupted()) {
 			if(this.server.getServerSocket().isClosed()) {
 				Thread.currentThread().interrupt();
@@ -90,9 +82,6 @@ public class ClientManager extends Thread {
 	public boolean close() {
 		closing = true;
 		Thread.currentThread().interrupt();
-		if(this.readThread != null) {
-			this.readThread.interrupt();
-		}
 		this.communicationHandler.forEach(ch -> ch.close());
 		return true;
 	}

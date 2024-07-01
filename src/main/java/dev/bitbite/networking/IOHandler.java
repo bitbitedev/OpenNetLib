@@ -66,9 +66,9 @@ public class IOHandler {
 		}
 		this.inputStream = inputStream;
 		this.outputStream = outputStream;
-		this.readBuffer = new ArrayList<Byte>();
+		this.readBuffer = new ArrayList<>();
 		this.readCallback = onRead;
-		this.listeners = new ArrayList<IOHandlerListener>();
+		this.listeners = new ArrayList<>();
 		this.lastRead = System.nanoTime();
 	}
 	
@@ -99,8 +99,9 @@ public class IOHandler {
 			return;
 		}
 		try {
-			if(inputStream.available() > 0) {
-				readNBytes(MAX_READ_SIZE);
+			int available = 0;
+			if((available = inputStream.available()) > 0) {
+				readNBytes(Math.min(available, MAX_READ_SIZE));
 			}
 		} catch (SocketException e) {
 			if(e.getMessage().contains("Connection reset") || e.getMessage().contains("Socket closed")) {
@@ -113,6 +114,19 @@ public class IOHandler {
 		}
 	}
 	
+	public void readBlocking() {
+		if(closing || closed) {
+			return;
+		}
+		try {
+			this.notifyListeners(EventType.DATA_READ_START);
+			readToNBytes(MAX_READ_SIZE);
+			this.notifyListeners(EventType.DATA_READ_END);
+		} catch (Exception e) {
+			this.notifyListeners(EventType.DATA_READ_FAILED, e);
+		}
+	}
+
 	/**
 	 * Tries to read a set amount of bytes from the stream. 
 	 * If an end-of-message byte is detected the read bytes are passed to the
@@ -143,7 +157,7 @@ public class IOHandler {
 				}
 			}
 		} catch (SocketException e) {
-			if(e.getMessage().contains("Connection reset") || e.getMessage().contains("Socket closed")) {
+			if(e.getMessage().contains("Connection reset") || e.getMessage().contains("Socket closed") || e.getMessage().contains("Broken pipe")) {
 				close();
 			} else {
 				this.notifyListeners(EventType.DATA_READ_FAILED, e);

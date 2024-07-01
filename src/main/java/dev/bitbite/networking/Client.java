@@ -136,14 +136,12 @@ public abstract class Client {
 			if(this.readThread != null) {
 				this.readThread.interrupt();
 			}
-			this.readThread = new Thread(()->{
+			this.readThread = Thread.ofVirtual().name("read-thread").start(()->{
 				while(!Thread.interrupted()) {
 					this.iOHandler.read();
 				}
 				Thread.currentThread().interrupt();
 			});
-			this.readThread.setName("Data reader");
-			this.readThread.start();
 			this.disconnectedServerDetector.start();
 		} catch (Exception e) {
 			this.notifyListeners(EventType.CONNECTION_FAILED, e);

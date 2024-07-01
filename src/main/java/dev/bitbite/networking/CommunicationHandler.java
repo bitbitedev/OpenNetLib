@@ -2,7 +2,7 @@ package dev.bitbite.networking;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.List;
 
 import dev.bitbite.networking.Server.EventType;
 import lombok.Getter;
@@ -15,6 +15,7 @@ public class CommunicationHandler {
 	private Socket clientSocket;
 	private ClientManager clientManager;
 	@Getter private IOHandler iOHandler;
+	private Thread readThread;
 	
 	/**
 	 * Creates a CommunicationHandler object for a socket
@@ -32,6 +33,11 @@ public class CommunicationHandler {
 		} catch (IOException e) {
 			this.clientManager.getServer().notifyListeners(Server.EventType.COMMUNICATIONHANDLER_INIT_FAILED, e);
 		}
+		this.readThread = Thread.ofVirtual().name("readthread-"+getIP()).start(() -> {
+			while(!readThread.isInterrupted()) {
+				this.iOHandler.readBlocking();
+			}
+		});
 	}
 	
 	/**
@@ -40,6 +46,8 @@ public class CommunicationHandler {
 	public void close() {
 		this.clientManager.getServer().notifyListeners(EventType.COMMUNICATIONHANDLER_CLOSE, this);
 		try {
+			this.readThread.interrupt();
+			this.readThread.join(100);
 			this.iOHandler.close();
 			this.clientSocket.close();
 			this.clientManager.removeCommunicationHandler(this);
@@ -96,11 +104,12 @@ public class CommunicationHandler {
 	 * Registers a list of listeners to the underlying IOHandler
 	 * @param listener to add
 	 */
-	public void registerListener(ArrayList<IOHandlerListener> listener) {
+	public void registerListener(List<IOHandlerListener> listener) {
 		listener.forEach(l -> this.iOHandler.registerListener(l));
 	}
 
 	/**
+	 * Returns the remote socket address of the associated client socket
 	 * @return the remote socket address of the associated client socket
 	 */
 	public String getIP() {
