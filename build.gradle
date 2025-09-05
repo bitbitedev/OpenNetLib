@@ -82,8 +82,8 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.12.2'
     
     //lombok
-    compileOnly 'org.projectlombok:lombok:1.18.38'
-	annotationProcessor 'org.projectlombok:lombok:1.18.38'
+    compileOnly 'org.projectlombok:lombok:1.18.40'
+	annotationProcessor 'org.projectlombok:lombok:1.18.40'
 }
 
 tasks.named('test') {
